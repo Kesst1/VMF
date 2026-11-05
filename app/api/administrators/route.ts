@@ -6,59 +6,99 @@ export const dynamic = "force-dynamic";
 const GUILD_ID = "1457406867960762583";
 
 const ROLE_GROUPS = [
-  { name: "COMMISSIONER", roleId: "1457406868136788202", description: "The highest authority of VMF.", icon: "♛" },
-  { name: "DEPUTY COMMISSIONER", roleId: "1457406868136788201", description: "Supporting VMF leadership.", icon: "♛" },
-  { name: "MAIN DEVELOPER", roleId: "1457406868136788196", description: "Leading technical development.", icon: "⌘" },
-  { name: "DEVELOPER", roleId: "1457406868136788195", description: "Building and maintaining VMF.", icon: "⌘" },
-  { name: "CHIEF OF STAFF", roleId: "1457406868124209313", description: "Overseeing staff operations.", icon: "✦" },
-  { name: "SENIOR STAFF", roleId: "1457406868136788194", description: "Experienced VMF staff members.", icon: "◆" },
-  { name: "STAFF", roleId: "1457406868136788193", description: "Managing the VMF community.", icon: "◆" },
-  { name: "MODERATOR", roleId: "1457406868124209312", description: "Maintaining a fair community.", icon: "⬡" },
-  { name: "OFFICIAL TEAM", roleId: "1457406868136789310", description: "Official VMF representatives.", icon: "⚽" },
-  { name: "COMMUNITY", roleId: "1457406868078202953", description: "Members of the VMF community.", icon: "♟" },
+  { name: "COMMISSIONER", roleId: "1457406868136788202" },
+  { name: "DEPUTY COMMISSIONER", roleId: "1457406868136788201" },
+  { name: "MAIN DEVELOPER", roleId: "1457406868136788196" },
+  { name: "DEVELOPER", roleId: "1457406868136788195" },
+  { name: "CHIEF OF STAFF", roleId: "1457406868124209313" },
+  { name: "SENIOR STAFF", roleId: "1457406868136788194" },
+  { name: "STAFF", roleId: "1457406868136788193" },
+  { name: "MODERATOR", roleId: "1457406868124209312" },
+  { name: "OFFICIAL TEAM", roleId: "1457406868124209310" },
+  { name: "COMMUNITY", roleId: "1457406868078202953" },
 ];
+
+type DiscordUser = {
+  id: string;
+  username: string;
+  global_name?: string | null;
+  discriminator?: string;
+  avatar?: string | null;
+  bot?: boolean;
+};
+
+type DiscordMember = {
+  user: DiscordUser;
+  nick?: string | null;
+  roles: string[];
+};
+
+function getAvatar(user: DiscordUser) {
+  if (user.avatar) {
+    const extension = user.avatar.startsWith("a_") ? "gif" : "png";
+
+    return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${extension}?size=128`;
+  }
+
+  const defaultAvatar = Number(user.discriminator || 0) % 6;
+
+  return `https://cdn.discordapp.com/embed/avatars/${defaultAvatar}.png`;
+}
 
 export async function GET() {
   const token = process.env.DISCORD_BOT_TOKEN;
 
   if (!token) {
     return NextResponse.json(
-      { error: "Discord bot token is not configured." },
+      { error: "DISCORD_BOT_TOKEN is not configured in Vercel." },
       { status: 500 }
     );
   }
 
   try {
-    const allMembers: any[] = [];
+    const allMembers: DiscordMember[] = [];
     let after = "0";
 
     while (true) {
-      const response = await fetch(
-        `https://discord.com/api/v10/guilds/${GUILD_ID}/members?limit=1000&after=${after}`,
-        {
-          headers: {
-            Authorization: `Bot ${token}`,
-          },
-          cache: "no-store",
-        }
+      const url = new URL(
+        `https://discord.com/api/v10/guilds/${GUILD_ID}/members`
       );
 
+      url.searchParams.set("limit", "1000");
+      url.searchParams.set("after", after);
+
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bot ${token}`,
+        },
+        cache: "no-store",
+      });
+
       if (!response.ok) {
+        const details = await response.text();
+
+        console.error("Discord API error:", response.status, details);
+
         return NextResponse.json(
-          { error: "Discord API request failed.", status: response.status },
+          {
+            error: "Discord API request failed.",
+            discordStatus: response.status,
+          },
           { status: 502 }
         );
       }
 
-      const members = await response.json();
+      const members: DiscordMember[] = await response.json();
 
       if (!Array.isArray(members)) {
-        throw new Error("Invalid Discord members response.");
+        throw new Error("Discord returned an invalid members response.");
       }
 
       allMembers.push(...members);
 
-      if (members.length < 1000) break;
+      if (members.length < 1000) {
+        break;
+      }
 
       after = members[members.length - 1].user.id;
     }
@@ -67,8 +107,8 @@ export async function GET() {
       ...group,
       members: [] as {
         id: string;
-        name: string;
         username: string;
+        displayName: string;
         avatar: string;
       }[],
     }));
@@ -78,34 +118,41 @@ export async function GET() {
 
       if (!user || user.bot) continue;
 
-      // Only show the member in their highest-ranking VMF role.
-      const group = groups.find((item) =>
-        member.roles.includes(item.roleId)
+      // A member is displayed only under their highest VMF role.
+      const groupIndex = ROLE_GROUPS.findIndex((group) =>
+        member.roles.includes(group.roleId)
       );
 
-      if (!group) continue;
+      if (groupIndex === -1) continue;
 
-      const avatar = user.avatar
-        ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
-        : `https://cdn.discordapp.com/embed/avatars/${Number(user.discriminator || 0) % 5}.png`;
-
-      group.members.push({
+      groups[groupIndex].members.push({
         id: user.id,
-        name: member.nick || user.global_name || user.username,
         username: user.username,
-        avatar,
+        displayName:
+          member.nick || user.global_name || user.username,
+        avatar: getAvatar(user),
       });
     }
 
     return NextResponse.json(
-      { groups, totalMembers: groups.reduce((sum, group) => sum + group.members.length, 0) },
-      { headers: { "Cache-Control": "no-store" } }
+      {
+        groups,
+        totalMembers: groups.reduce(
+          (total, group) => total + group.members.length,
+          0
+        ),
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
     );
   } catch (error) {
-    console.error("VMF Discord API error:", error);
+    console.error("VMF administrators API error:", error);
 
     return NextResponse.json(
-      { error: "Unable to retrieve VMF Discord members." },
+      { error: "An unexpected error occurred while loading Discord members." },
       { status: 500 }
     );
   }
