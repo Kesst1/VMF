@@ -1,128 +1,101 @@
 
-const players: { name: string; username: string; role: string }[] = [];
+const teams: {
+  name: string;
+  description: string;
+  members: number;
+}[] = [];
 
-export default function PlayersPage() {
+export default function TeamsPage() {
   return (
-    <main style={{ minHeight: "100vh", background: "#fafafa", color: "#111" }}>
+    <main style={{
+      minHeight: "100vh",
+      background: "#fafafa",
+      color: "#111",
+      fontFamily: "Arial, sans-serif",
+    }}>
       <nav style={{
-        height: 85,
-        padding: "0 8%",
+        minHeight: 78,
+        padding: "0 5%",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        gap: 20,
+        flexWrap: "wrap",
         background: "#fff",
-        borderBottom: "1px solid #eee"
+        borderBottom: "1px solid #eee",
       }}>
-        <a href="/" style={{ fontSize: 27, fontWeight: 900 }}>VMF.</a>
+        <a href="/" style={{ fontSize: 28, fontWeight: 900 }}>VMF.</a>
 
-        <div style={{ display: "flex", gap: 28, fontSize: 13 }}>
+        <div style={{ display: "flex", gap: 25, fontSize: 13, fontWeight: 600 }}>
           <a href="/">Home</a>
-          <a href="/players" style={{ fontWeight: 800 }}>Players</a>
+          <a href="/teams" style={{ fontWeight: 900 }}>Teams</a>
           <a href="/administrators">Administrators</a>
           <a href="/verify">Verification</a>
         </div>
+
+        <a href="https://discord.com/" target="_blank" rel="noreferrer" style={{
+          background: "#111",
+          color: "#fff",
+          padding: "12px 19px",
+          borderRadius: 30,
+          fontSize: 12,
+          fontWeight: 700,
+        }}>
+          Join Our Discord ↗
+        </a>
       </nav>
 
-      <section style={{ padding: "90px 8% 40px", maxWidth: 1300, margin: "auto" }}>
+      <section style={{ maxWidth: 1400, margin: "auto", padding: "85px 6%" }}>
         <p style={{
           fontSize: 11,
+          letterSpacing: 5,
+          color: "#777",
           fontWeight: 800,
-          letterSpacing: 4,
-          color: "#888"
         }}>
-          VMF COMMUNITY
+          THE VMF COMMUNITY
         </p>
 
         <h1 style={{
-          fontSize: "clamp(45px, 7vw, 76px)",
-          letterSpacing: -4,
+          fontSize: "clamp(48px, 8vw, 85px)",
           fontWeight: 900,
-          marginTop: 18
+          letterSpacing: -5,
+          marginTop: 15,
         }}>
-          VERIFIED PLAYERS<span style={{ color: "#aaa" }}>.</span>
+          TEAMS<span style={{ color: "#aaa" }}>.</span>
         </h1>
 
-        <p style={{
-          color: "#777",
-          fontSize: 15,
-          marginTop: 15,
-          lineHeight: 1.8
-        }}>
-          Discover the officially verified members of the VMF community.
+        <p style={{ color: "#777", fontSize: 15, marginTop: 15 }}>
+          Discover the teams competing and representing the VMF community.
         </p>
 
         <div style={{
           marginTop: 55,
-          padding: 25,
           background: "#fff",
           border: "1px solid #eee",
-          borderRadius: 12,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
+          borderRadius: 15,
+          padding: "65px 20px",
+          textAlign: "center",
         }}>
-          <div>
-            <p style={{ fontSize: 12, color: "#888" }}>OFFICIAL DIRECTORY</p>
-            <h2 style={{ fontSize: 25, marginTop: 8 }}>Player Directory</h2>
-          </div>
-          <span style={{
-            background: "#f2f2f2",
-            padding: "10px 15px",
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 700
-          }}>
-            {players.length} PLAYERS
-          </span>
+          <div style={{ fontSize: 40 }}>⚽</div>
+          <h2 style={{ marginTop: 15, fontSize: 23 }}>
+            Teams coming soon
+          </h2>
+          <p style={{ marginTop: 10, color: "#888", fontSize: 14 }}>
+            Official VMF teams will be displayed here.
+          </p>
         </div>
-
-        {players.length === 0 ? (
-          <div style={{
-            marginTop: 20,
-            padding: "75px 20px",
-            textAlign: "center",
-            background: "#fff",
-            border: "1px solid #eee",
-            borderRadius: 12
-          }}>
-            <div style={{ fontSize: 35 }}>◎</div>
-            <h3 style={{ fontSize: 20, marginTop: 15 }}>
-              No verified players yet
-            </h3>
-            <p style={{ color: "#888", fontSize: 14, marginTop: 10 }}>
-              Verified members will appear here once they join the directory.
-            </p>
-          </div>
-        ) : (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 18,
-            marginTop: 20
-          }}>
-            {players.map((player) => (
-              <article key={player.username} style={{
-                background: "#fff",
-                border: "1px solid #eee",
-                padding: 25,
-                borderRadius: 12
-              }}>
-                <h3>{player.name}</h3>
-                <p style={{ color: "#888" }}>@{player.username}</p>
-                <p>{player.role}</p>
-              </article>
-            ))}
-          </div>
-        )}
       </section>
 
       <footer style={{
         borderTop: "1px solid #eee",
-        padding: "30px 8%",
+        padding: "25px 5%",
+        display: "flex",
+        justifyContent: "space-between",
         color: "#999",
-        fontSize: 12
+        fontSize: 11,
       }}>
-        © 2026 VMF — VIRTUAL MATCH FOOTBALL
+        <span>© 2026 VMF</span>
+        <span>VIRTUAL MATCH FOOTBALL</span>
       </footer>
     </main>
   );
