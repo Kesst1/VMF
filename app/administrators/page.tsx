@@ -47,6 +47,7 @@ export default function AdministratorsPage() {
 
       setGroups(data.groups || []);
       setTotalMembers(data.totalMembers || 0);
+
       setLastUpdated(
         new Date().toLocaleTimeString("en-GB", {
           hour: "2-digit",
@@ -57,7 +58,7 @@ export default function AdministratorsPage() {
       setError(
         err instanceof Error
           ? err.message
-          : "Something went wrong while loading members."
+          : "Something went wrong."
       );
     } finally {
       setLoading(false);
@@ -73,12 +74,10 @@ export default function AdministratorsPage() {
 
     return groups.map((group) => ({
       ...group,
-      members: group.members.filter((member) => {
-        return (
-          member.displayName.toLowerCase().includes(query) ||
-          member.username.toLowerCase().includes(query)
-        );
-      }),
+      members: group.members.filter((member) =>
+        member.displayName.toLowerCase().includes(query) ||
+        member.username.toLowerCase().includes(query)
+      ),
     }));
   }, [groups, search]);
 
@@ -90,12 +89,15 @@ export default function AdministratorsPage() {
   return (
     <main className="admin-page">
       <div className="admin-container">
+
         <header className="admin-header">
           <div className="header-top">
             <a href="/" className="brand">
               <span className="brand-mark">VMF</span>
               <span className="brand-divider" />
-              <span className="brand-name">VIRTUAL MODIFIED FOOTBALL</span>
+              <span className="brand-name">
+                VIRTUAL MODIFIED FOOTBALL
+              </span>
             </a>
 
             <span className="directory-label">
@@ -122,6 +124,7 @@ export default function AdministratorsPage() {
         </header>
 
         <section className="directory-section">
+
           <div className="directory-top">
             <div>
               <div className="section-label">OUR PEOPLE</div>
@@ -167,12 +170,14 @@ export default function AdministratorsPage() {
           <div className="directory-controls">
             <div className="search-box">
               <span className="search-icon">⌕</span>
+
               <input
                 type="text"
                 placeholder="Search members by username..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
+
               {search && (
                 <button
                   className="clear-search"
@@ -206,28 +211,31 @@ export default function AdministratorsPage() {
 
           {!loading && !error && (
             <div className="groups-list">
+
               {filteredGroups.map((group, index) => (
                 <section className="role-section" key={group.roleId}>
+
                   <div className="role-heading">
                     <div className="role-heading-left">
                       <span className="role-number">
                         {String(index + 1).padStart(2, "0")}
                       </span>
+
                       <h3>{group.name}</h3>
                     </div>
 
                     <span className="role-count">
-                      {group.members.length}{" "}
-                      {group.members.length === 1 ? "MEMBER" : "MEMBERS"}
+                      {group.members.length} MEMBERS
                     </span>
                   </div>
 
                   {group.members.length > 0 ? (
                     <div className="members-grid">
                       {group.members.map((member) => (
-                        <article
+                        <a
                           className="member-card"
                           key={member.id}
+                          href={`/administrators/${member.id}`}
                         >
                           <div className="member-avatar-wrap">
                             <img
@@ -236,6 +244,7 @@ export default function AdministratorsPage() {
                               alt={member.displayName}
                               loading="lazy"
                             />
+
                             <span className="member-status" />
                           </div>
 
@@ -245,7 +254,7 @@ export default function AdministratorsPage() {
                           </div>
 
                           <span className="member-arrow">↗</span>
-                        </article>
+                        </a>
                       ))}
                     </div>
                   ) : (
@@ -253,33 +262,38 @@ export default function AdministratorsPage() {
                       No members assigned to this category.
                     </div>
                   )}
+
                 </section>
               ))}
 
-              {filteredGroups.length === 0 && (
+              {visibleMembers === 0 && (
                 <div className="empty-role">
-                  No role categories were returned by the API.
+                  {search
+                    ? `No members match "${search}".`
+                    : "No members found in the directory."}
                 </div>
               )}
 
-              {visibleMembers === 0 && search && (
-                <div className="empty-role">
-                  No members match "{search}".
-                </div>
-              )}
             </div>
           )}
 
           <div className="directory-footer">
             <div className="footer-status">
               <span className="status-dot" />
-              {error ? "CONNECTION ERROR" : loading ? "CONNECTING" : "DIRECTORY CONNECTED"}
+              {error
+                ? "CONNECTION ERROR"
+                : loading
+                  ? "CONNECTING"
+                  : "DIRECTORY CONNECTED"}
             </div>
 
             <span>
-              {lastUpdated ? `LAST UPDATED ${lastUpdated}` : "VIRTUAL MODIFIED FOOTBALL"}
+              {lastUpdated
+                ? `LAST UPDATED ${lastUpdated}`
+                : "VIRTUAL MODIFIED FOOTBALL"}
             </span>
           </div>
+
         </section>
 
         <footer className="page-footer">
@@ -287,6 +301,7 @@ export default function AdministratorsPage() {
           <span>VIRTUAL MODIFIED FOOTBALL</span>
           <a href="/">BACK TO HOME ↑</a>
         </footer>
+
       </div>
 
       <style jsx>{`
@@ -593,11 +608,14 @@ export default function AdministratorsPage() {
           padding: 13px;
           border: 1px solid #ededed;
           border-radius: 3px;
+          text-decoration: none;
+          color: inherit;
+          cursor: pointer;
           transition: border-color 0.2s, background 0.2s;
         }
 
         .member-card:hover {
-          border-color: #bdbdbd;
+          border-color: #999;
           background: #fafafa;
         }
 
