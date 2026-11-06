@@ -13,6 +13,7 @@ function escapeHtml(value: string) {
       '"': "&quot;",
       "'": "&#39;",
     };
+
     return entities[char];
   });
 }
@@ -20,9 +21,13 @@ function escapeHtml(value: string) {
 function result(
   message: string,
   status = 200,
-  details?: { username?: string; robloxId?: string }
+  details?: {
+    username?: string;
+    robloxId?: string;
+  }
 ) {
   const success = status >= 200 && status < 300;
+
   const username = escapeHtml(details?.username || "");
   const robloxId = escapeHtml(details?.robloxId || "");
   const safeMessage = escapeHtml(message);
@@ -33,9 +38,14 @@ function result(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex,nofollow">
+
   <title>${success ? "Verification Successful" : "Verification Failed"} | VMF</title>
+
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -43,27 +53,30 @@ function result(
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background: #f4f4f5;
+      background: #f5f5f5;
       color: #111;
       font-family: Arial, Helvetica, sans-serif;
     }
+
     .card {
       width: 100%;
       max-width: 460px;
       background: #fff;
-      border: 1px solid #e5e5e5;
+      border: 1px solid #e8e8e8;
       border-radius: 18px;
       padding: 38px 30px;
       text-align: center;
-      box-shadow: 0 18px 55px rgba(0,0,0,.07);
+      box-shadow: 0 18px 55px rgba(0,0,0,.06);
     }
-    .brand {
-      font-size: 25px;
-      font-weight: 900;
-      letter-spacing: 5px;
-      margin-bottom: 32px;
+
+    .logo {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 25px;
     }
-    .brand span { color: #999; }
+
     .icon {
       width: 68px;
       height: 68px;
@@ -76,25 +89,29 @@ function result(
       font-size: 34px;
       font-weight: bold;
     }
+
     h1 {
       font-size: 25px;
       margin: 0 0 12px;
       letter-spacing: -.7px;
     }
+
     .description {
       color: #777;
       font-size: 14px;
-      line-height: 1.6;
+      line-height: 1.7;
       margin: 0 0 26px;
     }
+
     .profile {
-      padding: 17px;
+      padding: 18px;
       margin: 24px 0;
       border: 1px solid #e9e9e9;
       border-radius: 12px;
       background: #fafafa;
       text-align: left;
     }
+
     .profile-label {
       color: #888;
       font-size: 10px;
@@ -103,12 +120,17 @@ function result(
       text-transform: uppercase;
       margin-bottom: 6px;
     }
+
     .profile-value {
       font-size: 15px;
       font-weight: 700;
       overflow-wrap: anywhere;
     }
-    .profile-row + .profile-row { margin-top: 17px; }
+
+    .profile-row + .profile-row {
+      margin-top: 17px;
+    }
+
     .button {
       display: flex;
       align-items: center;
@@ -123,65 +145,98 @@ function result(
       letter-spacing: 1px;
       transition: .2s ease;
     }
+
     .button-primary {
       background: #111;
-      color: white;
+      color: #fff;
     }
-    .button-primary:hover { background: #333; }
+
+    .button-primary:hover {
+      background: #333;
+    }
+
     .button-secondary {
-      background: white;
+      background: #fff;
       color: #111;
       border: 1px solid #dedede;
     }
-    .button-secondary:hover { background: #f5f5f5; }
+
+    .button-secondary:hover {
+      background: #f5f5f5;
+    }
+
     .footer {
       color: #aaa;
       font-size: 10px;
       letter-spacing: 1.5px;
       margin-top: 30px;
     }
+
     @media (max-width: 420px) {
-      .card { padding: 30px 20px; }
-      h1 { font-size: 22px; }
+      .card {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
     }
   </style>
 </head>
+
 <body>
   <main class="card">
-    <div class="brand">V<span>MF</span></div>
+
+    <img
+      class="logo"
+      src="/vmf-logo.png"
+      alt="VMF Logo"
+    />
+
     <div class="icon">${success ? "✓" : "!"}</div>
-    <h1>${success ? "Verification Successful" : "Verification Failed"}</h1>
+
+    <h1>
+      ${success ? "Verification Successful" : "Verification Failed"}
+    </h1>
+
     <p class="description">${safeMessage}</p>
 
     ${success && username && robloxId ? `
       <section class="profile">
+
         <div class="profile-row">
           <div class="profile-label">Roblox Username</div>
           <div class="profile-value">${username}</div>
         </div>
+
         <div class="profile-row">
           <div class="profile-label">Roblox ID</div>
           <div class="profile-value">${robloxId}</div>
         </div>
+
         <div class="profile-row">
           <div class="profile-label">Verification Status</div>
           <div class="profile-value">✓ Verified</div>
         </div>
+
       </section>
     ` : ""}
 
-    <a class="button button-primary"
-       href="https://discord.com/channels/@me">
-       RETURN TO DISCORD
+    <a class="button button-primary" href="/">
+      GO TO WEBSITE →
     </a>
 
-    <a class="button button-secondary"
-       href="https://www.roblox.com/communities/11989341/VMF-VIRTUAL-MODIFIED-FOOTBALL#!/about"
-       target="_blank" rel="noopener noreferrer">
-       ROBLOX GROUP ↗
+    <a
+      class="button button-secondary"
+      href="https://discord.com/channels/@me"
+    >
+      RETURN TO DISCORD
     </a>
 
-    <div class="footer">VMF · VIRTUAL MODIFIED FOOTBALL</div>
+    <div class="footer">
+      VMF · VIRTUAL MODIFIED FOOTBALL
+    </div>
+
   </main>
 </body>
 </html>`;
@@ -199,12 +254,16 @@ function result(
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
+
     const code = params.get("code");
     const state = params.get("state");
     const oauthError = params.get("error");
 
     if (!state || state.length > 256) {
-      return result("The verification session is invalid. Please start again.", 400);
+      return result(
+        "The verification session is invalid. Please start again.",
+        400
+      );
     }
 
     // Consume OAuth state exactly once
@@ -216,14 +275,20 @@ export async function GET(request: NextRequest) {
     `;
 
     if (states.length === 0) {
-      return result("Your verification session expired or is invalid. Please try again.", 400);
+      return result(
+        "Your verification session expired or is invalid. Please try again.",
+        400
+      );
     }
 
     const discordId = String(states[0].discord_id);
     const codeVerifier = states[0].code_verifier;
 
     if (oauthError || !code) {
-      return result("Roblox authorization was cancelled. You can try again.", 400);
+      return result(
+        "Roblox authorization was cancelled. You can try again.",
+        400
+      );
     }
 
     const clientId = process.env.ROBLOX_CLIENT_ID;
@@ -232,7 +297,11 @@ export async function GET(request: NextRequest) {
 
     if (!clientId || !clientSecret || !redirectUri) {
       console.error("Missing Roblox OAuth environment variables.");
-      return result("The server OAuth configuration is incomplete.", 500);
+
+      return result(
+        "The server OAuth configuration is incomplete.",
+        500
+      );
     }
 
     // Exchange authorization code for access token
@@ -258,14 +327,24 @@ export async function GET(request: NextRequest) {
     );
 
     if (!tokenResponse.ok) {
-      console.error("Roblox token exchange failed:", tokenResponse.status);
-      return result("Roblox authentication could not be completed. Please try again.", 502);
+      console.error(
+        "Roblox token exchange failed:",
+        tokenResponse.status
+      );
+
+      return result(
+        "Roblox authentication could not be completed. Please try again.",
+        502
+      );
     }
 
     const tokenData = await tokenResponse.json();
 
     if (!tokenData.access_token) {
-      return result("Roblox did not return an access token.", 502);
+      return result(
+        "Roblox did not return an access token.",
+        502
+      );
     }
 
     // Retrieve authenticated Roblox identity
@@ -280,20 +359,34 @@ export async function GET(request: NextRequest) {
     );
 
     if (!userResponse.ok) {
-      console.error("Roblox userinfo failed:", userResponse.status);
-      return result("Could not retrieve your Roblox account information.", 502);
+      console.error(
+        "Roblox userinfo failed:",
+        userResponse.status
+      );
+
+      return result(
+        "Could not retrieve your Roblox account information.",
+        502
+      );
     }
 
     const userData = await userResponse.json();
+
     const robloxId = userData.sub;
+
     const robloxUsername =
-      userData.preferred_username || userData.name || "Unknown";
+      userData.preferred_username ||
+      userData.name ||
+      "Unknown";
 
     if (
       typeof robloxId !== "string" ||
       !/^\d{1,20}$/.test(robloxId)
     ) {
-      return result("Roblox returned invalid account information.", 400);
+      return result(
+        "Roblox returned invalid account information.",
+        400
+      );
     }
 
     // Insert only if both account IDs are not already linked
@@ -325,7 +418,10 @@ export async function GET(request: NextRequest) {
           return result(
             "This Discord account is already linked to this Roblox account.",
             200,
-            { username: robloxUsername, robloxId }
+            {
+              username: robloxUsername,
+              robloxId,
+            }
           );
         }
 
@@ -348,11 +444,18 @@ export async function GET(request: NextRequest) {
     return result(
       "Your Roblox account has been successfully linked to VMF. You can now return to Discord.",
       200,
-      { username: robloxUsername, robloxId }
+      {
+        username: robloxUsername,
+        robloxId,
+      }
     );
 
   } catch (error) {
     console.error("Roblox callback error:", error);
-    return result("An internal verification error occurred. Please try again.", 500);
+
+    return result(
+      "An internal verification error occurred. Please try again.",
+      500
+    );
   }
 }
