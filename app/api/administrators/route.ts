@@ -1,7 +1,9 @@
 
 import { NextResponse } from "next/server";
+import { sql } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const GUILD_ID = "1457406867960762583";
 
@@ -14,48 +16,49 @@ const ROLE_GROUPS = [
   { name: "SENIOR STAFF", roleId: "1457406868136788194" },
   { name: "STAFF", roleId: "1457406868136788193" },
   { name: "MODERATOR", roleId: "1457406868124209312" },
-  { name: "OFFICIAL TEAM", roleId: "1457406868124209310" },
+  { name: "OFFICIAL TEAM", roleId: "1457406868136788190" },
   { name: "COMMUNITY", roleId: "1457406868078202953" },
 ];
 
 type DiscordUser = {
   id: string;
-  username: string;
-  global_name?: string | null;
-  discriminator?: string;
-  avatar?: string | null;
   bot?: boolean;
 };
 
 type DiscordMember = {
   user: DiscordUser;
-  nick?: string | null;
   roles: string[];
 };
 
-function getAvatar(user: DiscordUser) {
-  if (user.avatar) {
-    const extension = user.avatar.startsWith("a_") ? "gif" : "png";
+type VerifiedUser = {
+  discord_id: string;
+  roblox_id: string;
+  roblox_username: string;
+};
 
-    return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${extension}?size=128`;
-  }
+type RobloxUser = {
+  id: number;
+  name: string;
+  displayName: string;
+};
 
-  const defaultAvatar = Number(user.discriminator || 0) % 6;
-
-  return `https://cdn.discordapp.com/embed/avatars/${defaultAvatar}.png`;
-}
+type RobloxThumbnail = {
+  targetId: number;
+  imageUrl: string;
+};
 
 export async function GET() {
   const token = process.env.DISCORD_BOT_TOKEN;
 
   if (!token) {
     return NextResponse.json(
-      { error: "DISCORD_BOT_TOKEN is not configured in Vercel." },
+      { error: "DISCORD_BOT_TOKEN is not configured." },
       { status: 500 }
     );
   }
 
   try {
+    // 1. Get all Discord members
     const allMembers: DiscordMember[] = [];
     let after = "0";
 
@@ -75,15 +78,10 @@ export async function GET() {
       });
 
       if (!response.ok) {
-        const details = await response.text();
-
-        console.error("Discord API error:", response.status, details);
+        console.error("Discord API error:", response.status);
 
         return NextResponse.json(
-          {
-            error: "Discord API request failed.",
-            discordStatus: response.status,
-          },
+          { error: "Discord API request failed." },
           { status: 502 }
         );
       }
@@ -91,18 +89,111 @@ export async function GET() {
       const members: DiscordMember[] = await response.json();
 
       if (!Array.isArray(members)) {
-        throw new Error("Discord returned an invalid members response.");
+        throw new Error("Invalid Discord members response.");
       }
 
       allMembers.push(...members);
 
-      if (members.length < 1000) {
-        break;
-      }
+      if (members.length < 1000) break;
 
       after = members[members.length - 1].user.id;
     }
 
+    // 2. Get all verified accounts from Neon
+    const verifiedRows = await sql`
+      SELECT discord_id, roblox_id, roblox_username
+      FROM verified_users
+    ` as VerifiedUser[];
+
+    const verifiedMap = new Map<string, VerifiedUser>();
+
+    for (const row of verifiedRows) {
+      verifiedMap.set(String(row.discord_id), {
+        discord_id: String(row.discord_id),
+        roblox_id: String(row.roblox_id),
+        roblox_username: row.roblox_username,
+      });
+    }
+
+    // 3. Find members with a VMF role AND a Roblox verification
+    const eligibleMembers = allMembers
+      .filter((member) => member.user && !member.user.bot)
+      .map((member) => {
+        const groupIndex = ROLE_GROUPS.findIndex((group) =>
+          member.roles.includes(group.roleId)
+        );
+
+        if (groupIndex === -1) return null;
+
+        const verified = verifiedMap.get(member.user.id);
+
+        if (!verified) return null;
+
+        return {
+          discordId: member.user.id,
+          groupIndex,
+          robloxId: verified.roblox_id,
+          robloxUsername: verified.roblox_username,
+        };
+      })
+      .filter((member): member is NonNullable<typeof member> =>
+        member !== null
+      );
+
+    // 4. Get Roblox display names and avatars in batches
+    const robloxDetails = new Map<
+      string,
+      { displayName: string; avatar: string }
+    >();
+
+    const robloxIds = [
+      ...new Set(eligibleMembers.map((member) => member.robloxId)),
+    ];
+
+    for (let i = 0; i < robloxIds.length; i += 100) {
+      const batch = robloxIds.slice(i, i + 100);
+      const numericIds = batch.map(Number);
+
+      const [usersResponse, thumbnailsResponse] = await Promise.all([
+        fetch("https://users.roblox.com/v1/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userIds: numericIds }),
+          cache: "no-store",
+        }),
+
+        fetch(
+          `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${batch.join(",")}&size=150x150&format=Png&isCircular=false`,
+          { cache: "no-store" }
+        ),
+      ]);
+
+      const users: RobloxUser[] = usersResponse.ok
+        ? (await usersResponse.json()).data || []
+        : [];
+
+      const thumbnails: RobloxThumbnail[] = thumbnailsResponse.ok
+        ? (await thumbnailsResponse.json()).data || []
+        : [];
+
+      const thumbnailMap = new Map(
+        thumbnails.map((item) => [
+          String(item.targetId),
+          item.imageUrl,
+        ])
+      );
+
+      for (const user of users) {
+        const id = String(user.id);
+
+        robloxDetails.set(id, {
+          displayName: user.displayName || user.name,
+          avatar: thumbnailMap.get(id) || "",
+        });
+      }
+    }
+
+    // 5. Build the directory using Roblox information
     const groups = ROLE_GROUPS.map((group) => ({
       ...group,
       members: [] as {
@@ -113,24 +204,22 @@ export async function GET() {
       }[],
     }));
 
-    for (const member of allMembers) {
-      const user = member.user;
+    for (const member of eligibleMembers) {
+      const roblox = robloxDetails.get(member.robloxId);
 
-      if (!user || user.bot) continue;
+      groups[member.groupIndex].members.push({
+        // Keep Discord ID for the existing profile page URL
+        id: member.discordId,
 
-      // A member is displayed only under their highest VMF role.
-      const groupIndex = ROLE_GROUPS.findIndex((group) =>
-        member.roles.includes(group.roleId)
-      );
+        // Roblox username
+        username: member.robloxUsername,
 
-      if (groupIndex === -1) continue;
-
-      groups[groupIndex].members.push({
-        id: user.id,
-        username: user.username,
+        // Roblox display name
         displayName:
-          member.nick || user.global_name || user.username,
-        avatar: getAvatar(user),
+          roblox?.displayName || member.robloxUsername,
+
+        // Roblox avatar
+        avatar: roblox?.avatar || "",
       });
     }
 
@@ -152,7 +241,9 @@ export async function GET() {
     console.error("VMF administrators API error:", error);
 
     return NextResponse.json(
-      { error: "An unexpected error occurred while loading Discord members." },
+      {
+        error: "An unexpected error occurred while loading the directory.",
+      },
       { status: 500 }
     );
   }
