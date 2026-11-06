@@ -188,9 +188,9 @@ function result(
   <main class="card">
 
     <img
-      class="logo"
-      src="/vmf-logo.png"
-      alt="VMF Logo"
+  src="https://i.ibb.co/nsFrT7D3/VMF-removebg-preview.png"
+  alt="VMF"
+  style="width:100px;height:100px;object-fit:contain;margin-bottom:25px;"
     />
 
     <div class="icon">${success ? "✓" : "!"}</div>
