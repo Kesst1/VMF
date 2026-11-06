@@ -4,12 +4,194 @@ import { sql } from "../../../../lib/db";
 
 export const runtime = "nodejs";
 
-function result(message: string, status = 200) {
-  return new NextResponse(message, {
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => {
+    const entities: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return entities[char];
+  });
+}
+
+function result(
+  message: string,
+  status = 200,
+  details?: { username?: string; robloxId?: string }
+) {
+  const success = status >= 200 && status < 300;
+  const username = escapeHtml(details?.username || "");
+  const robloxId = escapeHtml(details?.robloxId || "");
+  const safeMessage = escapeHtml(message);
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>${success ? "Verification Successful" : "Verification Failed"} | VMF</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: #f4f4f5;
+      color: #111;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 18px;
+      padding: 38px 30px;
+      text-align: center;
+      box-shadow: 0 18px 55px rgba(0,0,0,.07);
+    }
+    .brand {
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: 5px;
+      margin-bottom: 32px;
+    }
+    .brand span { color: #999; }
+    .icon {
+      width: 68px;
+      height: 68px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 22px;
+      border-radius: 50%;
+      background: ${success ? "#e9f8ef" : "#fff0f0"};
+      color: ${success ? "#168344" : "#c63838"};
+      font-size: 34px;
+      font-weight: bold;
+    }
+    h1 {
+      font-size: 25px;
+      margin: 0 0 12px;
+      letter-spacing: -.7px;
+    }
+    .description {
+      color: #777;
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0 0 26px;
+    }
+    .profile {
+      padding: 17px;
+      margin: 24px 0;
+      border: 1px solid #e9e9e9;
+      border-radius: 12px;
+      background: #fafafa;
+      text-align: left;
+    }
+    .profile-label {
+      color: #888;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .profile-value {
+      font-size: 15px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+    .profile-row + .profile-row { margin-top: 17px; }
+    .button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 49px;
+      margin-top: 11px;
+      border-radius: 9px;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      transition: .2s ease;
+    }
+    .button-primary {
+      background: #111;
+      color: white;
+    }
+    .button-primary:hover { background: #333; }
+    .button-secondary {
+      background: white;
+      color: #111;
+      border: 1px solid #dedede;
+    }
+    .button-secondary:hover { background: #f5f5f5; }
+    .footer {
+      color: #aaa;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      margin-top: 30px;
+    }
+    @media (max-width: 420px) {
+      .card { padding: 30px 20px; }
+      h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">V<span>MF</span></div>
+    <div class="icon">${success ? "✓" : "!"}</div>
+    <h1>${success ? "Verification Successful" : "Verification Failed"}</h1>
+    <p class="description">${safeMessage}</p>
+
+    ${success && username && robloxId ? `
+      <section class="profile">
+        <div class="profile-row">
+          <div class="profile-label">Roblox Username</div>
+          <div class="profile-value">${username}</div>
+        </div>
+        <div class="profile-row">
+          <div class="profile-label">Roblox ID</div>
+          <div class="profile-value">${robloxId}</div>
+        </div>
+        <div class="profile-row">
+          <div class="profile-label">Verification Status</div>
+          <div class="profile-value">✓ Verified</div>
+        </div>
+      </section>
+    ` : ""}
+
+    <a class="button button-primary"
+       href="https://discord.com/channels/@me">
+       RETURN TO DISCORD
+    </a>
+
+    <a class="button button-secondary"
+       href="https://www.roblox.com/communities/11989341/VMF-VIRTUAL-MODIFIED-FOOTBALL#!/about"
+       target="_blank" rel="noopener noreferrer">
+       ROBLOX GROUP ↗
+    </a>
+
+    <div class="footer">VMF · VIRTUAL MODIFIED FOOTBALL</div>
+  </main>
+</body>
+</html>`;
+
+  return new NextResponse(html, {
     status,
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }
@@ -17,16 +199,15 @@ function result(message: string, status = 200) {
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
-
     const code = params.get("code");
     const state = params.get("state");
     const oauthError = params.get("error");
 
     if (!state || state.length > 256) {
-      return result("Invalid or missing verification state.", 400);
+      return result("The verification session is invalid. Please start again.", 400);
     }
 
-    // Consume the OAuth state exactly once
+    // Consume OAuth state exactly once
     const states = await sql`
       DELETE FROM oauth_states
       WHERE state = ${state}
@@ -35,19 +216,14 @@ export async function GET(request: NextRequest) {
     `;
 
     if (states.length === 0) {
-      return result(
-        "Verification session expired or invalid. Please try again.",
-        400
-      );
+      return result("Your verification session expired or is invalid. Please try again.", 400);
     }
 
     const discordId = String(states[0].discord_id);
     const codeVerifier = states[0].code_verifier;
 
     if (oauthError || !code) {
-      return result(
-        "Roblox authorization was cancelled. You can try again."
-      );
+      return result("Roblox authorization was cancelled. You can try again.", 400);
     }
 
     const clientId = process.env.ROBLOX_CLIENT_ID;
@@ -56,7 +232,7 @@ export async function GET(request: NextRequest) {
 
     if (!clientId || !clientSecret || !redirectUri) {
       console.error("Missing Roblox OAuth environment variables.");
-      return result("Server OAuth configuration error.", 500);
+      return result("The server OAuth configuration is incomplete.", 500);
     }
 
     // Exchange authorization code for access token
@@ -82,14 +258,8 @@ export async function GET(request: NextRequest) {
     );
 
     if (!tokenResponse.ok) {
-      console.error(
-        "Roblox token exchange failed:",
-        tokenResponse.status
-      );
-      return result(
-        "Could not complete Roblox authentication. Please try again.",
-        502
-      );
+      console.error("Roblox token exchange failed:", tokenResponse.status);
+      return result("Roblox authentication could not be completed. Please try again.", 502);
     }
 
     const tokenData = await tokenResponse.json();
@@ -110,30 +280,23 @@ export async function GET(request: NextRequest) {
     );
 
     if (!userResponse.ok) {
-      console.error(
-        "Roblox userinfo failed:",
-        userResponse.status
-      );
-      return result("Could not retrieve Roblox account information.", 502);
+      console.error("Roblox userinfo failed:", userResponse.status);
+      return result("Could not retrieve your Roblox account information.", 502);
     }
 
     const userData = await userResponse.json();
-
     const robloxId = userData.sub;
     const robloxUsername =
-      userData.preferred_username ||
-      userData.name ||
-      "Unknown";
+      userData.preferred_username || userData.name || "Unknown";
 
     if (
       typeof robloxId !== "string" ||
       !/^\d{1,20}$/.test(robloxId)
     ) {
-      return result("Invalid Roblox account information.", 400);
+      return result("Roblox returned invalid account information.", 400);
     }
 
-    // Save the verified account.
-    // Both Discord ID and Roblox ID must be unique.
+    // Insert only if both account IDs are not already linked
     const inserted = await sql`
       INSERT INTO verified_users (
         discord_id,
@@ -160,7 +323,9 @@ export async function GET(request: NextRequest) {
       if (existingDiscord.length > 0) {
         if (String(existingDiscord[0].roblox_id) === robloxId) {
           return result(
-            "This Discord account is already linked to this Roblox account."
+            "This Discord account is already linked to this Roblox account.",
+            200,
+            { username: robloxUsername, robloxId }
           );
         }
 
@@ -181,11 +346,13 @@ export async function GET(request: NextRequest) {
     );
 
     return result(
-      `Verification successful!\n\nRoblox username: ${robloxUsername}\nRoblox ID: ${robloxId}\n\nYou can now return to Discord.`
+      "Your Roblox account has been successfully linked to VMF. You can now return to Discord.",
+      200,
+      { username: robloxUsername, robloxId }
     );
 
   } catch (error) {
     console.error("Roblox callback error:", error);
-    return result("An internal verification error occurred.", 500);
+    return result("An internal verification error occurred. Please try again.", 500);
   }
 }
