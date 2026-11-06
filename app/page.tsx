@@ -5,53 +5,67 @@ export default function Home() {
       minHeight: "100vh",
       background: "#fff",
       color: "#111",
-      padding: "40px 8%",
+      padding: "35px 8%",
+      fontFamily: "Arial, Helvetica, sans-serif",
     }}>
       <nav style={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
         borderBottom: "1px solid #eee",
-        paddingBottom: "25px",
+        paddingBottom: "22px",
+        flexWrap: "wrap",
+        gap: "20px",
       }}>
-        <h1 style={{fontSize: "28px", fontWeight: 900}}>
-          VMF<span style={{color: "#999"}}>.</span>
-        </h1>
-        <span style={{color: "#777", fontSize: "13px"}}>
-          VIRTUAL MATCH FOOTBALL
+        <img
+          src="/vmf-logo.png"
+          alt="VMF Logo"
+          style={{ width: "75px", height: "75px", objectFit: "contain" }}
+        />
+
+        <span style={{
+          color: "#777",
+          fontSize: "11px",
+          fontWeight: 700,
+          letterSpacing: "3px",
+        }}>
+          VIRTUAL MODIFIED FOOTBALL
         </span>
       </nav>
 
       <section style={{
-        maxWidth: "850px",
-        margin: "150px auto",
+        maxWidth: "900px",
+        margin: "130px auto",
         textAlign: "center",
       }}>
         <p style={{
-          color: "#777",
-          letterSpacing: "4px",
-          fontSize: "12px",
-          fontWeight: 700,
+          color: "#888",
+          letterSpacing: "5px",
+          fontSize: "11px",
+          fontWeight: 800,
         }}>
           THE OFFICIAL VMF PLATFORM
         </p>
 
-        <h2 style={{
+        <h1 style={{
           fontSize: "clamp(48px, 9vw, 100px)",
           fontWeight: 900,
           letterSpacing: "-6px",
+          lineHeight: 0.95,
           margin: "25px 0",
         }}>
           MORE THAN<br />FOOTBALL.
-        </h2>
+        </h1>
 
         <p style={{
           color: "#777",
-          fontSize: "16px",
+          fontSize: "15px",
           lineHeight: 1.8,
+          maxWidth: "550px",
+          margin: "25px auto",
         }}>
-          Discover the players, administrators and community
-          behind VMF.
+          Discover the verified players, administrators and
+          community behind Virtual Modified Football.
         </p>
 
         <div style={{
@@ -66,18 +80,25 @@ export default function Home() {
             color: "#fff",
             padding: "16px 25px",
             borderRadius: "6px",
-            fontWeight: 700,
+            fontWeight: 800,
+            fontSize: "12px",
+            letterSpacing: "1px",
+            textDecoration: "none",
           }}>
-            Verified Players →
+            VERIFIED PLAYERS →
           </a>
 
           <a href="/administrators" style={{
             border: "1px solid #ddd",
+            color: "#111",
             padding: "16px 25px",
             borderRadius: "6px",
-            fontWeight: 700,
+            fontWeight: 800,
+            fontSize: "12px",
+            letterSpacing: "1px",
+            textDecoration: "none",
           }}>
-            Administrators
+            ADMINISTRATORS
           </a>
         </div>
       </section>
@@ -86,12 +107,15 @@ export default function Home() {
         borderTop: "1px solid #eee",
         paddingTop: "25px",
         color: "#999",
-        fontSize: "12px",
+        fontSize: "11px",
         display: "flex",
         justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: "12px",
+        letterSpacing: "1px",
       }}>
         <span>© 2026 VMF</span>
-        <span>VIRTUAL MATCH FOOTBALL</span>
+        <span>VIRTUAL MODIFIED FOOTBALL</span>
       </footer>
     </main>
   );
