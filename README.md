@@ -39,3 +39,11 @@ All commands retain the exact Admin role gate configured in the bot file.
 - `reason` is optional. Obtain the fixture ID from `/vmf fixtures_list`.
 - Fixtures that are live, submitted, or confirmed cannot be postponed or rescheduled through this command.
 - Times use `Europe/Madrid`.
+
+## Additional Discord administration commands
+
+- `/vmf teams_add_bulk competition_name team_names group_name`: add up to 64 teams to a competition. Enter names separated by commas or new lines. Existing registrations are skipped.
+- `/vmf teams_remove_bulk competition_name team_names`: remove up to 64 registrations by team name. It refuses if any fixture in that competition is live, submitted, or confirmed; fixtures involving removed teams are also deleted, along with their reports/events.
+- `/vmf delete_all confirmation`: permanently deletes all match events, match reports, fixtures, competition registrations, competitions, and global teams. The confirmation must be exactly `DELETE ALL VMF`. This does not delete verified Discord/Roblox accounts or activity logs.
+
+The bulk endpoints are `/api/admin/competition-teams/bulk` (POST and DELETE) and `/api/admin/delete-all` (POST). They require the existing `ADMIN_API_KEY` header.
