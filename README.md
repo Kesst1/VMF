@@ -1,6 +1,6 @@
 # VMF — competition formats update
 
-This package includes the VMF website project plus an updated Discord bridge (`vmf_web.py`). 
+This package includes the VMF website project plus an updated Discord bridge (`vmf_web.py`).
 
 ## Tournament types
 - `league`: one round-robin schedule (single match against each opponent).
@@ -32,3 +32,10 @@ All commands retain the exact Admin role gate configured in the bot file.
 - `elimination` creates first-round pairings but does not yet advance winners automatically.
 - Champions top-8/repechage calculation is a ranking output; bracket creation is not yet automated.
 - Run a staging test before replacing the live deployment.
+
+### Postpone / reschedule a fixture
+- `/vmf postpone fixture_id:<ID>` marks a fixture as `postponed` without assigning a replacement date.
+- `/vmf postpone fixture_id:<ID> new_date:YYYY-MM-DD new_time:HH:MM` reschedules it and returns it to `scheduled`.
+- `reason` is optional. Obtain the fixture ID from `/vmf fixtures_list`.
+- Fixtures that are live, submitted, or confirmed cannot be postponed or rescheduled through this command.
+- Times use `Europe/Madrid`.
