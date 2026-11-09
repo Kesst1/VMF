@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type Member = {
   id: string;
+  robloxId: string;
   username: string;
   displayName: string;
   avatar: string;
@@ -76,7 +77,8 @@ export default function PlayersPage() {
       ...group,
       members: group.members.filter((member) =>
         member.displayName.toLowerCase().includes(query) ||
-        member.username.toLowerCase().includes(query)
+        member.username.toLowerCase().includes(query) ||
+        member.robloxId.includes(query)
       ),
     }));
   }, [groups, search]);
@@ -173,7 +175,7 @@ export default function PlayersPage() {
 
               <input
                 type="text"
-                placeholder="Search members by username..."
+                placeholder="Search by username or Roblox ID..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
@@ -251,6 +253,7 @@ export default function PlayersPage() {
                           <div className="member-info">
                             <strong>{member.displayName}</strong>
                             <span>@{member.username}</span>
+                            <span className="roblox-id">Roblox ID: {member.robloxId}</span>
                           </div>
 
                           <span className="member-arrow">↗</span>
@@ -665,6 +668,12 @@ export default function PlayersPage() {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+        }
+
+        .member-info .roblox-id {
+          color: #666;
+          font-size: 9px;
+          font-weight: 700;
         }
 
         .member-arrow {
