@@ -25,7 +25,7 @@ function compareTeams(a: StandingRow, b: StandingRow) {
     a.name.localeCompare(b.name);
 }
 
-function Table({ teams, qualification }: { teams: StandingRow[]; qualification: "top-three" | "last-out" | "none" }) {
+function Table({ teams, qualification, qualifiedIds }: { teams: StandingRow[]; qualification: "top-three" | "last-out" | "none"; qualifiedIds?: Set<string> }) {
   const sorted = [...teams].sort(compareTeams);
   return (
     <div className="table-wrap">
@@ -40,7 +40,7 @@ function Table({ teams, qualification }: { teams: StandingRow[]; qualification: 
         <tbody>
           {sorted.map((team, index) => {
             const qualified = qualification === "top-three"
-              ? index < 3
+              ? (qualifiedIds ? qualifiedIds.has(team.id) : index < 3)
               : qualification === "last-out"
                 ? index < sorted.length - 1
                 : false;
@@ -152,7 +152,18 @@ export default async function TablePage({ params }: { params: Promise<{ id: stri
     (groups[groupName] ||= []).push(team);
   }
   const groupNames = Object.keys(groups).sort();
-  const qualifiedCount = isTableElimination ? groupNames.length * 3 : 0;
+  const isTwelveTeamTable = isTableElimination && rows.length === 12 && groupNames.length === 3;
+  const thirdPlaced = isTwelveTeamTable
+    ? groupNames.map(name => [...groups[name]].sort(compareTeams)[2]).filter(Boolean)
+        .sort((a, b) => b.goal_difference - a.goal_difference ||
+          b.points - a.points || b.gf - a.gf || a.name.localeCompare(b.name))
+    : [];
+  const bestThirdIds = new Set(thirdPlaced.slice(0, 2).map(team => team.id));
+  const qualifiedIds = new Set<string>([
+    ...groupNames.flatMap(name => [...groups[name]].sort(compareTeams).slice(0, 2).map(team => team.id)),
+    ...bestThirdIds
+  ]);
+  const qualifiedCount = isTableElimination ? (isTwelveTeamTable ? 8 : 12) : 0;
 
   return (
     <main className="container">
@@ -160,7 +171,9 @@ export default async function TablePage({ params }: { params: Promise<{ id: stri
         eyebrow="COMPETITION TABLE"
         title={competition.name}
         description={isTableElimination
-          ? "Four groups of four. The top three teams in each group qualify for the 12-team elimination bracket."
+          ? (isTwelveTeamTable
+              ? "Three groups of four. The top two in each group and the two best third-placed teams by goal difference qualify."
+              : "Four groups of four. The top three teams in each group qualify for the 12-team elimination bracket.")
           : isChampions
             ? "Group standings and overall qualification ranking."
             : "League standings calculated from confirmed results."}
@@ -169,13 +182,15 @@ export default async function TablePage({ params }: { params: Promise<{ id: stri
       {isTableElimination && (
         <section className="content-section">
           <div className="stat-grid">
-            <div className="stat-card"><strong>4</strong><span>Groups</span></div>
-            <div className="stat-card"><strong>16</strong><span>Teams</span></div>
+            <div className="stat-card"><strong>{groupNames.length}</strong><span>Groups</span></div>
+            <div className="stat-card"><strong>{rows.length}</strong><span>Teams</span></div>
             <div className="stat-card"><strong>{qualifiedCount}</strong><span>Qualified</span></div>
-            <div className="stat-card"><strong>4</strong><span>Eliminated</span></div>
+            <div className="stat-card"><strong>{rows.length - qualifiedCount}</strong><span>Eliminated</span></div>
           </div>
           <p className="notice" style={{ marginTop: 18 }}>
-            The top three teams in Groups A, B, C and D advance. The fourth-placed team in each group is eliminated.
+            {isTwelveTeamTable
+              ? "The top two teams in each group advance. The two best third-placed teams across Groups A, B and C also qualify, ranked primarily by goal difference. The remaining third-placed team and all fourth-placed teams are eliminated."
+              : "The top three teams in Groups A, B, C and D advance. The fourth-placed team in each group is eliminated."}
           </p>
         </section>
       )}
@@ -188,7 +203,11 @@ export default async function TablePage({ params }: { params: Promise<{ id: stri
             {groupNames.map(groupName => (
               <section key={groupName}>
                 <div className="section-head"><div><p className="eyebrow">GROUP STAGE</p><h2>Group {groupName}</h2></div></div>
-                <Table teams={groups[groupName]} qualification={isTableElimination ? "top-three" : "last-out"} />
+                <Table
+                  teams={groups[groupName]}
+                  qualification={isTableElimination ? "top-three" : "last-out"}
+                  qualifiedIds={isTwelveTeamTable ? qualifiedIds : undefined}
+                />
               </section>
             ))}
           </div>

@@ -54,9 +54,9 @@ export async function POST(req: Request) {
       ORDER BY t.name ASC, ct.team_id ASC
     ` as Team[];
 
-    if (format === "table_elimination" && teams.length !== 16) {
+    if (format === "table_elimination" && ![12, 16].includes(teams.length)) {
       return NextResponse.json({
-        error: `Table + Elimination requires exactly 16 teams. Currently registered: ${teams.length}.`
+        error: `Table + Elimination requires exactly 12 or 16 teams. Currently registered: ${teams.length}.`
       }, { status: 400 });
     }
     if (teams.length < 2) {
@@ -108,8 +108,10 @@ export async function POST(req: Request) {
     }
 
     if (format === "table_elimination") {
-      // Fixed 4x4 groups: alphabetical team order, four teams per group.
-      const groupNames = ["A", "B", "C", "D"];
+      // 12 teams: 3 groups of 4. 16 teams: 4 groups of 4.
+      const groupNames = teams.length === 12
+        ? ["A", "B", "C"]
+        : ["A", "B", "C", "D"];
       for (let index = 0; index < teams.length; index++) {
         const groupName = groupNames[Math.floor(index / 4)];
         await sql`
@@ -166,9 +168,15 @@ export async function POST(req: Request) {
       teams: teams.length,
       created,
       matchdays,
-      groups: format === "table_elimination" ? ["A", "B", "C", "D"] : undefined,
-      qualified_per_group: format === "table_elimination" ? 3 : undefined,
-      qualified_total: format === "table_elimination" ? 12 : undefined
+      groups: format === "table_elimination"
+        ? (teams.length === 12 ? ["A", "B", "C"] : ["A", "B", "C", "D"])
+        : undefined,
+      qualified_total: format === "table_elimination" ? (teams.length === 12 ? 8 : 12) : undefined,
+      qualification_rule: format === "table_elimination"
+        ? (teams.length === 12
+            ? "Top two in each group plus the two best third-placed teams by goal difference"
+            : "Top three in each group")
+        : undefined
     });
   } catch (error) {
     console.error("Fixture generation error:", error);

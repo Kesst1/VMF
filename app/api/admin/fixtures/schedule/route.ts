@@ -17,10 +17,17 @@ export async function POST(req: Request) {
         !Number.isInteger(intervalMinutes) || intervalMinutes < 15 || intervalMinutes > 1440) {
       return NextResponse.json({ error: "competition_id, a valid matchday, scheduled_at and interval_minutes (15-1440) are required" }, { status: 400 });
     }
-    const date = new Date(scheduledAt);
-    if (Number.isNaN(date.getTime()) || !/[+-]\\d{2}:\\d{2}$/.test(scheduledAt)) {
-      return NextResponse.json({ error: "scheduled_at must be an ISO datetime with timezone offset" }, { status: 400 });
-    }
+const date = new Date(scheduledAt);
+
+if (
+  Number.isNaN(date.getTime()) ||
+  !/[+-]\d{2}:\d{2}$/.test(scheduledAt)
+) {
+  return NextResponse.json(
+    { error: "scheduled_at must be an ISO datetime with timezone offset" },
+    { status: 400 }
+  );
+}
 
     // Assign a different kickoff to each fixture, in a stable order, leaving
     // the configured interval between matches so the referee team can rotate.

@@ -17,6 +17,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     // Repair older Table + Elimination competitions created before group
     // assignments were persisted. Keep existing A-D assignments unchanged.
     if (format === "table_elimination") {
+      const teamsPerGroup = 4;
       await sql`
         WITH unassigned AS (
           SELECT ct.team_id,
@@ -28,9 +29,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         )
         UPDATE competition_teams ct
         SET group_name = CASE
-          WHEN unassigned.rn <= 4 THEN 'A'
-          WHEN unassigned.rn <= 8 THEN 'B'
-          WHEN unassigned.rn <= 12 THEN 'C'
+          WHEN unassigned.rn <= ${teamsPerGroup} THEN 'A'
+          WHEN unassigned.rn <= ${teamsPerGroup * 2} THEN 'B'
+          WHEN unassigned.rn <= ${teamsPerGroup * 3} THEN 'C'
           ELSE 'D'
         END
         FROM unassigned
@@ -91,17 +92,41 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       (groups[groupName] ||= []).push(team);
     }
 
+    const groupNames = Object.keys(groups).sort();
+    const isTwelveTeamTable = format === "table_elimination" &&
+      standings.length === 12 && groupNames.length === 3;
+    const thirdPlaced: any[] = [];
+
     for (const [groupName, groupTeams] of Object.entries(groups)) {
       groupTeams.sort(compare);
+      if (isTwelveTeamTable && groupTeams[2]) thirdPlaced.push(groupTeams[2]);
       groups[groupName] = groupTeams.map((team, index) => ({
         ...team,
         position: index + 1,
         qualified: format === "table_elimination"
-          ? index < 3
+          ? (isTwelveTeamTable ? index < 2 : index < 3)
           : format === "champions"
             ? index < groupTeams.length - 1
             : false
       }));
+    }
+
+    if (isTwelveTeamTable) {
+      // Third-place ranking is decided primarily by goal difference.
+      thirdPlaced.sort((a, b) =>
+        b.goal_difference - a.goal_difference ||
+        b.points - a.points ||
+        b.gf - a.gf ||
+        String(a.name).localeCompare(String(b.name))
+      );
+      const qualifiedThirdIds = new Set(thirdPlaced.slice(0, 2).map(team => team.id));
+      for (const groupName of groupNames) {
+        groups[groupName] = groups[groupName].map(team => ({
+          ...team,
+          qualified: team.position <= 2 ||
+            (team.position === 3 && qualifiedThirdIds.has(team.id))
+        }));
+      }
     }
 
     const allTeams = Object.values(groups).flat();
@@ -115,10 +140,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const direct = format === "champions" ? overall.slice(0, 8) : [];
     const repechage = format === "champions" ? overall.slice(8) : [];
     const qualified = format === "table_elimination"
-      ? Object.keys(groups).sort().flatMap(group => groups[group].filter(team => team.qualified))
+      ? groupNames.flatMap(group => groups[group].filter(team => team.qualified))
       : [];
 
-    return NextResponse.json({ format, standings: overall, groups, qualified, direct, repechage });
+    return NextResponse.json({
+      format, standings: overall, groups, qualified, direct, repechage,
+      qualification_rule: format === "table_elimination"
+        ? (isTwelveTeamTable
+            ? "Top two per group plus the two best third-placed teams by goal difference"
+            : "Top three per group")
+        : undefined
+    });
   } catch (error) {
     console.error("Standings API error:", error);
     return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
