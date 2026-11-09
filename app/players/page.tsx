@@ -240,12 +240,18 @@ export default function PlayersPage() {
                           href={`/players/${member.id}`}
                         >
                           <div className="member-avatar-wrap">
-                            <img
-                              className="member-avatar"
-                              src={member.avatar}
-                              alt={member.displayName}
-                              loading="lazy"
-                            />
+                            {member.avatar ? (
+                              <img
+                                className="member-avatar"
+                                src={member.avatar}
+                                alt={member.displayName}
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="member-avatar avatar-placeholder">
+                                {member.displayName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
 
                             <span className="member-status" />
                           </div>
@@ -634,6 +640,13 @@ export default function PlayersPage() {
           border-radius: 50%;
           object-fit: cover;
           background: #e9e9e9;
+        }
+
+        .avatar-placeholder {
+          display: grid;
+          place-items: center;
+          color: #777;
+          font-weight: 800;
         }
 
         .member-status {

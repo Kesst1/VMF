@@ -3,6 +3,7 @@ import { sql } from "@/lib/db";
 import { PageHeading } from "@/components/SiteShell";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const GUILD_ID = "1457406867960762583";
 
@@ -59,32 +60,37 @@ export default async function PlayerProfile({
   let avatar = "";
   let roleName = "VERIFIED PLAYER";
 
-  const robloxResults = await Promise.allSettled([
-    fetch(`https://users.roblox.com/v1/users/${encodeURIComponent(robloxId)}`, {
-      next: { revalidate: 3600 },
-    }),
-    fetch(
-      `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${encodeURIComponent(robloxId)}&size=420x420&format=Png&isCircular=false`,
-      { next: { revalidate: 3600 } }
-    ),
-  ]);
+  // Roblox public profile information
+  try {
+    const [userResponse, avatarResponse] = await Promise.all([
+      fetch(`https://users.roblox.com/v1/users/${robloxId}`, {
+        next: { revalidate: 3600 },
+      }),
+      fetch(
+        `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${robloxId}&size=420x420&format=Png&isCircular=false`,
+        { next: { revalidate: 3600 } }
+      ),
+    ]);
 
-  if (robloxResults[0].status === "fulfilled" && robloxResults[0].value.ok) {
-    const user = (await robloxResults[0].value.json()) as RobloxUser;
-    displayName = user.displayName || displayName;
+    if (userResponse.ok) {
+      const user: RobloxUser = await userResponse.json();
+      displayName = user.displayName || displayName;
+    }
+
+    if (avatarResponse.ok) {
+      const image: RobloxThumbnail = await avatarResponse.json();
+      avatar = image.data?.[0]?.imageUrl || "";
+    }
+  } catch (error) {
+    console.error("Roblox profile fetch error:", error);
   }
 
-  if (robloxResults[1].status === "fulfilled" && robloxResults[1].value.ok) {
-    const thumbnail = (await robloxResults[1].value.json()) as RobloxThumbnail;
-    avatar = thumbnail.data?.[0]?.imageUrl || "";
-  }
-
+  // Resolve the member's highest VMF role from Discord
   const discordToken = process.env.DISCORD_BOT_TOKEN;
-
   if (discordToken) {
     try {
       const response = await fetch(
-        `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${encodeURIComponent(String(player.discord_id))}`,
+        `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${player.discord_id}`,
         {
           headers: { Authorization: `Bot ${discordToken}` },
           cache: "no-store",
@@ -92,14 +98,14 @@ export default async function PlayerProfile({
       );
 
       if (response.ok) {
-        const member = (await response.json()) as DiscordMember;
+        const member: DiscordMember = await response.json();
         const role = ROLE_GROUPS.find((item) =>
           (member.roles || []).includes(item.roleId)
         );
         if (role) roleName = role.name;
       }
     } catch (error) {
-      console.error("Player Discord role lookup error:", error);
+      console.error("Discord role lookup error:", error);
     }
   }
 
@@ -116,12 +122,11 @@ export default async function PlayerProfile({
           {avatar ? (
             <img className="player-avatar" src={avatar} alt={displayName} />
           ) : (
-            <div className="player-avatar avatar-fallback">
+            <div className="player-avatar avatar-placeholder">
               {displayName.charAt(0).toUpperCase()}
             </div>
           )}
-
-          <div className="player-heading">
+          <div className="player-information">
             <span className="verified-label">✓ {roleName}</span>
             <h2>{displayName}</h2>
             <p>@{player.roblox_username}</p>
@@ -156,7 +161,6 @@ export default async function PlayerProfile({
         </div>
 
         <h2 className="statistics-title">Player Statistics</h2>
-
         <div className="stat-grid">
           <div className="stat-card">
             <strong>{stats.matches}</strong>
@@ -188,10 +192,10 @@ export default async function PlayerProfile({
           align-items: center;
           gap: 22px;
           padding: 25px;
-          margin-bottom: 22px;
           background: #f7f7f7;
           border: 1px solid #ededed;
           border-radius: 5px;
+          margin-bottom: 20px;
         }
         .player-avatar {
           width: 105px;
@@ -201,19 +205,19 @@ export default async function PlayerProfile({
           border-radius: 5px;
           background: #e9e9e9;
         }
-        .avatar-fallback {
+        .avatar-placeholder {
           display: grid;
           place-items: center;
           color: #777;
-          font-size: 36px;
+          font-size: 32px;
           font-weight: 800;
         }
-        .player-heading h2 {
+        .player-information h2 {
           margin: 10px 0 5px;
           font-size: 26px;
           letter-spacing: -1px;
         }
-        .player-heading p {
+        .player-information p {
           margin: 0;
           color: #888;
           font-size: 13px;
@@ -234,11 +238,11 @@ export default async function PlayerProfile({
           display: flex;
           flex-direction: column;
           gap: 9px;
-          min-width: 0;
           padding: 18px;
           background: #fff;
           border: 1px solid #ededed;
           border-radius: 4px;
+          min-width: 0;
         }
         .detail-card span {
           color: #999;
@@ -259,7 +263,7 @@ export default async function PlayerProfile({
           .player-details { grid-template-columns: 1fr; }
           .player-profile { padding: 16px; }
           .player-avatar { width: 75px; height: 75px; }
-          .player-heading h2 { font-size: 20px; }
+          .player-information h2 { font-size: 20px; }
         }
       `}</style>
     </main>
