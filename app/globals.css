@@ -45,3 +45,26 @@ html.compact-mode .data-table td{padding-top:9px;padding-bottom:9px}html.compact
 html.reduce-motion *,html.reduce-motion *::before,html.reduce-motion *::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 @media(max-width:800px){.fixture-list{grid-template-columns:1fr}.settings-layout{grid-template-columns:1fr}.settings-about{grid-column:auto}}
 @media(max-width:500px){.theme-options{grid-template-columns:1fr}.fixture-teams{gap:7px}.fixture-teams strong{font-size:11px}}
+
+/* Directory page follows the user's selected site theme */
+html[data-theme="dark"] .admin-page{background:#313338!important;color:#f2f3f5!important}
+html[data-theme="dark"] .admin-page .header-top{border-color:#41434a!important}
+html[data-theme="dark"] .admin-page .brand{color:#f2f3f5!important}
+html[data-theme="dark"] .admin-page .brand-divider{background:#555861!important}
+html[data-theme="dark"] .admin-page .directory-section{background:#2b2d33!important;border-color:#41434a!important}
+html[data-theme="dark"] .admin-page .stat-card,
+html[data-theme="dark"] .admin-page .member-card{background:#25272c!important;border-color:#41434a!important;color:#f2f3f5!important}
+html[data-theme="dark"] .admin-page .member-card:hover{background:#303239!important}
+html[data-theme="dark"] .admin-page .role-section,
+html[data-theme="dark"] .admin-page .directory-controls{border-color:#41434a!important}
+html[data-theme="dark"] .admin-page .role-heading{background:#f2f3f5!important;color:#202127!important}
+html[data-theme="dark"] .admin-page .role-count{color:#555861!important}
+html[data-theme="dark"] .admin-page .role-number{color:#777b82!important}
+html[data-theme="dark"] .admin-page .search-box input{color:#f2f3f5!important}
+html[data-theme="dark"] .admin-page .member-status{border-color:#25272c!important}
+html[data-theme="dark"] .admin-page .empty-role{border-color:#555861!important;color:#aeb2ba!important}
+html[data-theme="dark"] .admin-page .refresh-button,
+html[data-theme="dark"] .admin-page .error-panel button{background:#f2f3f5!important;color:#202127!important;border-color:#f2f3f5!important}
+html[data-theme="dark"] .admin-page .page-footer a{color:#d5d7dc!important}
+.team-competition{margin-bottom:42px}
+.team-competition .section-head{padding-bottom:15px;border-bottom:1px solid var(--line)}

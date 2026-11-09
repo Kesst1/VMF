@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 const links = [
   ["Overview", "/"], ["Competitions", "/competitions"], ["Fixtures", "/fixtures"],
   ["Standings", "/standings"], ["Teams", "/teams"], ["Players", "/players"],
-  ["Statistics", "/stats"], ["Administrators", "/administrators"],
+  ["Statistics", "/stats"],
 ];
 
 export function SiteShell({ children }: { children: ReactNode }) {
