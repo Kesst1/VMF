@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {sql} from "@/lib/db";
+export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){const {id}=await params;try{const rows=await sql`SELECT me.event_type,COUNT(*)::int total FROM match_events me JOIN fixtures f ON f.id=me.fixture_id WHERE me.roblox_id=${id} AND f.status='confirmed' GROUP BY me.event_type`;return NextResponse.json({roblox_id:id,stats:Object.fromEntries(rows.map((r:any)=>[r.event_type,r.total]))});}catch{return NextResponse.json({error:"Database unavailable"},{status:503});}}
