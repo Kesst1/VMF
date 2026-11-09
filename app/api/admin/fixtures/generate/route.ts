@@ -62,8 +62,8 @@ export async function POST(req: Request) {
     if (teams.length < 2) {
       return NextResponse.json({ error: "At least two teams are required" }, { status: 400 });
     }
-    if (format === "champions" && ![14, 16].includes(teams.length)) {
-      return NextResponse.json({ error: "Champions Format requires exactly 14 or 16 teams" }, { status: 400 });
+    if (format === "champions" && teams.length !== 16) {
+      return NextResponse.json({ error: `UEFA Format requires exactly 16 teams. Currently registered: ${teams.length}.` }, { status: 400 });
     }
 
     const existing = await sql`
@@ -126,20 +126,12 @@ export async function POST(req: Request) {
         await insertRounds(roundRobin(members.map(team => team.team_id)), "group", groupName);
       }
     } else if (format === "champions") {
-      const sizes = teams.length === 14 ? [4, 4, 3, 3] : [4, 4, 4, 4];
-      let offset = 0;
-      for (let index = 0; index < sizes.length; index++) {
-        const groupName = String.fromCharCode(65 + index);
-        const members = teams.slice(offset, offset + sizes[index]);
-        offset += sizes[index];
-        for (const team of members) {
-          await sql`
-            UPDATE competition_teams SET group_name = ${groupName}
-            WHERE competition_id = ${competitionId} AND team_id = ${team.team_id}
-          `;
-        }
-        await insertRounds(roundRobin(members.map(team => team.team_id)), "group", groupName);
-      }
+      // UEFA Format: 16-team single table, four rounds, four distinct opponents per team.
+      await sql`UPDATE competition_teams SET group_name = NULL WHERE competition_id = ${competitionId}`;
+      const shuffled = [...teams].sort((a, b) => a.name.localeCompare(b.name));
+      // Circle-method schedule: every team meets a different opponent in each of the first four rounds.
+      const rounds = roundRobin(shuffled.map(team => team.team_id)).slice(0, 4);
+      await insertRounds(rounds, "uefa_league", null);
     } else if (format === "league") {
       // Clear any stale group assignment from an earlier format.
       await sql`UPDATE competition_teams SET group_name = NULL WHERE competition_id = ${competitionId}`;
@@ -172,6 +164,7 @@ export async function POST(req: Request) {
         ? (teams.length === 12 ? ["A", "B", "C"] : ["A", "B", "C", "D"])
         : undefined,
       qualified_total: format === "table_elimination" ? (teams.length === 12 ? 8 : 12) : undefined,
+      uefa_format: format === "champions" ? { league_matches_per_team: 4, direct_qualifiers: 8, repechage_qualifiers: 4, total_knockout_teams: 12 } : undefined,
       qualification_rule: format === "table_elimination"
         ? (teams.length === 12
             ? "Top two in each group plus the two best third-placed teams by goal difference"

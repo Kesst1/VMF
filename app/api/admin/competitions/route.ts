@@ -21,8 +21,11 @@ export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url); const id = searchParams.get("id");
     if (!id) return NextResponse.json({error:"id is required"},{status:400});
-    const started = await sql`SELECT COUNT(*)::int count FROM fixtures WHERE competition_id=${id} AND status IN ('live','submitted','confirmed')`;
-    if (started[0].count) return NextResponse.json({error:"Cannot delete a competition after matches have started"},{status:409});
+    const fixtureIds = await sql`SELECT id FROM fixtures WHERE competition_id=${id}`;
+    for (const fixture of fixtureIds) {
+      await sql`DELETE FROM match_events WHERE fixture_id=${fixture.id}`;
+      await sql`DELETE FROM match_reports WHERE fixture_id=${fixture.id}`;
+    }
     await sql`DELETE FROM fixtures WHERE competition_id=${id}`;
     await sql`DELETE FROM competition_teams WHERE competition_id=${id}`;
     const rows = await sql`DELETE FROM competitions WHERE id=${id} RETURNING id`;
