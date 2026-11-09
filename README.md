@@ -1,6 +1,6 @@
 # VMF — competition formats update
 
-This package includes the VMF website project plus an updated Discord bridge (`vmf_web.py`).
+This package includes the VMF website project plus an updated Discord bridge (`vmf_web.py`). 
 
 ## Tournament types
 - `league`: one round-robin schedule (single match against each opponent).
