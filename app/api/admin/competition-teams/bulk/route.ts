@@ -3,7 +3,7 @@ import { sql } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export async function POST(req: Request) {
-  const denied = requireAdmin(req); if (denied) return denied;
+  const denied = await requireAdmin(req); if (denied) return denied;
   try {
     const body = await req.json();
     const competitionId = String(body.competition_id || "").trim();
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const denied = requireAdmin(req); if (denied) return denied;
+  const denied = await requireAdmin(req); if (denied) return denied;
   try {
     const body = await req.json();
     const competitionId = String(body.competition_id || "").trim();

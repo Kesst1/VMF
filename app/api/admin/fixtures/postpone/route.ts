@@ -3,7 +3,7 @@ import { sql } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export async function POST(req: Request) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
 
   try {

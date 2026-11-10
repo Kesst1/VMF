@@ -3,7 +3,7 @@ import { sql } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export async function DELETE(req: Request) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);

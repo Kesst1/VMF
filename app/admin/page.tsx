@@ -7,7 +7,6 @@ type Competition = { id: string; name: string; season?: string | null };
 type Fixture = { id: string; fixture_code: string; competition_id: string; home_name: string; away_name: string; home_score?: number | null; away_score?: number | null; status: string; matchday?: number | null; };
 
 export default function Admin() {
-  const [key, setKey] = useState("");
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [competitionId, setCompetitionId] = useState("");
@@ -19,7 +18,6 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
-  useEffect(() => { setKey(sessionStorage.getItem("vmf-admin-key") || ""); }, []);
   useEffect(() => {
     fetch("/api/competitions").then(r => r.json()).then(d => setCompetitions(d.competitions || [])).catch(() => setMessage("No se pudieron cargar las competiciones."));
   }, []);
@@ -59,13 +57,12 @@ export default function Admin() {
     );
   }, [fixtures, fixtureSearch]);
   async function submitResult() {
-    if (!key.trim()) { setMessage("Introduce tu clave de administrador."); return; }
     if (!fixtureId) { setMessage("Selecciona un fixture."); return; }
     const h = Number(homeScore), a = Number(awayScore);
     if (!Number.isInteger(h) || !Number.isInteger(a) || h < 0 || a < 0 || h > 99 || a > 99) { setMessage("Introduce goles válidos (0–99)."); return; }
     setBusy(true); setMessage("");
     try {
-      const response = await fetch("/api/admin/matches/report", { method: "POST", headers: { "Content-Type": "application/json", "x-admin-api-key": key }, body: JSON.stringify({ fixture_id: fixtureId, home_score: h, away_score: a }) });
+      const response = await fetch("/api/admin/matches/report", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ fixture_id: fixtureId, home_score: h, away_score: a }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "No se pudo guardar el resultado.");
       setMessage(`Resultado guardado y confirmado: ${data.fixture.fixture_code || selectedFixture?.fixture_code || "fixture"}.`);
@@ -79,8 +76,6 @@ export default function Admin() {
     <section className="content-section">
       <div className="dark-band"><h2>Match results.</h2><p>Selecciona la competición y el encuentro, introduce el marcador y envíalo. El resultado se guarda y confirma en una sola acción.</p></div>
       <div className="feature-card" style={{ maxWidth: 760, marginTop: 24 }}>
-        <label className="admin-label" htmlFor="admin-key">Admin API key</label>
-        <input id="admin-key" className="admin-input" type="password" autoComplete="current-password" value={key} onChange={e => { setKey(e.target.value); sessionStorage.setItem("vmf-admin-key", e.target.value); }} placeholder="Introduce ADMIN_API_KEY" />
         <label className="admin-label" htmlFor="competition">Competition</label>
         <select id="competition" className="admin-input" value={competitionId} onChange={e => setCompetitionId(e.target.value)}>
           <option value="">Select a competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.name}{c.season ? ` · ${c.season}` : ""}</option>)}
@@ -114,7 +109,7 @@ export default function Admin() {
         <button className="admin-submit" type="button" onClick={submitResult} disabled={busy || !fixtureId}>{busy ? "Submitting…" : "Submit & Confirm"}</button>
         {message && <p className="admin-message" role="status">{message}</p>}
       </div>
-      <div className="notice" style={{ marginTop: 20 }}>La clave se guarda únicamente en la sesión de este navegador y se envía al servidor en cada operación. No se incluye en el código público.</div>
+      <div className="notice" style={{ marginTop: 20 }}>Sesión protegida mediante Discord OAuth. Los permisos se verifican en el servidor con los roles actuales de VMF.</div>
     </section>
     <style jsx>{`
       .admin-label{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 8px;color:var(--foreground)}
