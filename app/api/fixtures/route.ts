@@ -4,23 +4,27 @@ import { sql } from "@/lib/db";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const competition = searchParams.get("competition");
-
   try {
     const fixtures = competition
       ? await sql`
           SELECT f.*, c.name AS competition, c.format AS competition_format,
-                 h.name AS home_name, a.name AS away_name
+                 h.name AS home_name, a.name AS away_name,
+                 COALESCE(NULLIF(h.short_name, ''), UPPER(LEFT(REGEXP_REPLACE(h.name, '[^A-Za-z0-9]', '', 'g'), 3))) AS home_code,
+                 COALESCE(NULLIF(a.short_name, ''), UPPER(LEFT(REGEXP_REPLACE(a.name, '[^A-Za-z0-9]', '', 'g'), 3))) AS away_code,
+                 ROW_NUMBER() OVER (PARTITION BY f.competition_id, LEAST(f.home_team_id, f.away_team_id), GREATEST(f.home_team_id, f.away_team_id) ORDER BY f.created_at, f.id) AS leg_number
           FROM fixtures f
           LEFT JOIN competitions c ON c.id = f.competition_id
           LEFT JOIN teams h ON h.id = f.home_team_id
           LEFT JOIN teams a ON a.id = f.away_team_id
           WHERE f.competition_id = ${competition}
-          ORDER BY f.stage, f.group_name NULLS LAST, f.matchday NULLS LAST,
-                   f.scheduled_at NULLS LAST, f.created_at
+          ORDER BY f.stage, f.group_name NULLS LAST, f.matchday NULLS LAST, f.scheduled_at NULLS LAST, f.created_at
         `
       : await sql`
           SELECT f.*, c.name AS competition, c.format AS competition_format,
-                 h.name AS home_name, a.name AS away_name
+                 h.name AS home_name, a.name AS away_name,
+                 COALESCE(NULLIF(h.short_name, ''), UPPER(LEFT(REGEXP_REPLACE(h.name, '[^A-Za-z0-9]', '', 'g'), 3))) AS home_code,
+                 COALESCE(NULLIF(a.short_name, ''), UPPER(LEFT(REGEXP_REPLACE(a.name, '[^A-Za-z0-9]', '', 'g'), 3))) AS away_code,
+                 ROW_NUMBER() OVER (PARTITION BY f.competition_id, LEAST(f.home_team_id, f.away_team_id), GREATEST(f.home_team_id, f.away_team_id) ORDER BY f.created_at, f.id) AS leg_number
           FROM fixtures f
           LEFT JOIN competitions c ON c.id = f.competition_id
           LEFT JOIN teams h ON h.id = f.home_team_id
@@ -28,8 +32,11 @@ export async function GET(req: Request) {
           ORDER BY f.scheduled_at NULLS LAST, f.created_at DESC
           LIMIT 100
         `;
-
-    return NextResponse.json({ fixtures });
+    const withCodes = fixtures.map((fixture: any) => ({
+      ...fixture,
+      fixture_code: `${String(fixture.home_code || "HOM").replace(/[^A-Za-z0-9]/g, "").slice(0, 3).toUpperCase()}-${String(fixture.away_code || "AWY").replace(/[^A-Za-z0-9]/g, "").slice(0, 3).toUpperCase()}-${fixture.leg_number || 1}`,
+    }));
+    return NextResponse.json({ fixtures: withCodes });
   } catch (error) {
     console.error("Fixtures API error:", error);
     return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
