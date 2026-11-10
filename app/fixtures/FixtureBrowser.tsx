@@ -1,0 +1,15 @@
+"use client";
+import { useMemo, useState } from "react";
+type Fixture = {id:string;competition:string|null;home_name:string|null;away_name:string|null;home_score:number|null;away_score:number|null;scheduled_at:string|null;status:string;matchday:number|null;stage:string|null;group_name:string|null;round_name:string|null};
+export default function FixtureBrowser({rows}:{rows:Fixture[]}) {
+ const leagues=useMemo(()=>[...new Set(rows.map(x=>x.competition||"VMF"))].sort(),[rows]);
+ const [league,setLeague]=useState("All Leagues");
+ const filtered=rows.filter(x=>league==="All Leagues"||(x.competition||"VMF")===league);
+ const groups=new Map<string,Map<string,Fixture[]>>();
+ for(const f of filtered){const comp=f.competition||"VMF";const round=f.matchday==null?(f.round_name||"Other fixtures"):`Matchday ${f.matchday}`;if(!groups.has(comp))groups.set(comp,new Map());const days=groups.get(comp)!;if(!days.has(round))days.set(round,[]);days.get(round)!.push(f);}
+ return <section className="content-section">
+  <div style={{display:"flex",flexWrap:"wrap",gap:10,alignItems:"center",marginBottom:28}}><strong style={{width:"100%",fontSize:18}}>Filter by League</strong>{["All Leagues",...leagues].map(x=><button key={x} onClick={()=>setLeague(x)} style={{border:"1px solid #dedede",borderRadius:8,padding:"10px 17px",background:league===x?"#159b55":"#fff",color:league===x?"#fff":"#171717",fontWeight:650,cursor:"pointer"}}>{x}</button>)}</div>
+  <h2 style={{fontSize:20,marginBottom:18}}>{league} <span style={{color:"#7b8490",fontWeight:500}}>({filtered.length} matches)</span></h2>
+  {!filtered.length?<div className="empty-state"><h3>No fixtures available</h3><p>Fixtures will appear here when a competition schedule is generated.</p></div>: [...groups.entries()].map(([comp,days])=><section className="fixture-competition" key={comp}><div className="fixture-competition-heading"><span className="eyebrow">COMPETITION</span><h2>{comp} Fixtures</h2><span className="fixture-count">{[...days.values()].reduce((n,a)=>n+a.length,0)} MATCHES</span></div>{[...days.entries()].map(([day,fixtures])=><section className="matchday-block" key={day}><div className="matchday-heading"><span>{day}</span><small>{fixtures.length} {fixtures.length===1?"MATCH":"MATCHES"}</small></div><div className="fixture-list">{fixtures.map(f=><article className="fixture-card" key={f.id}><div className="fixture-meta"><span>{f.stage==="group"&&f.group_name?`GROUP ${f.group_name}`:f.stage||"FIXTURE"}</span><span className="pill">{f.status}</span></div><div className="fixture-teams"><strong>{f.home_name||"TBC"}</strong><b className="fixture-score">{f.home_score??"—"} <i>:</i> {f.away_score??"—"}</b><strong>{f.away_name||"TBC"}</strong></div><div className="fixture-date">{f.scheduled_at?new Date(f.scheduled_at).toLocaleString("en-GB"):"Date to be confirmed"}</div></article>)}</div></section>)}</section>)}
+ </section>
+}
