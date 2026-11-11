@@ -62,7 +62,7 @@ export default function Admin() {
     if (!Number.isInteger(h) || !Number.isInteger(a) || h < 0 || a < 0 || h > 99 || a > 99) { setMessage("Introduce goles válidos (0–99)."); return; }
     setBusy(true); setMessage("");
     try {
-      const response = await fetch("/api/admin/matches/report", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ fixture_id: fixtureId, home_score: h, away_score: a }) });
+      const response = await fetch("/api/admin/matches/report", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", cache: "no-store", body: JSON.stringify({ fixture_id: fixtureId, home_score: h, away_score: a }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "No se pudo guardar el resultado.");
       setMessage(`Resultado guardado y confirmado: ${data.fixture.fixture_code || selectedFixture?.fixture_code || "fixture"}.`);

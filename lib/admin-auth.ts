@@ -78,17 +78,49 @@ export async function isAdminSessionAuthorized(token?: string | null): Promise<b
   return discordId ? checkDiscordAdmin(discordId) : false;
 }
 
-export async function requireAdmin(_request: Request) {
-  // Use Next.js cookie storage, matching the method used by app/admin/layout.tsx.
-  // This avoids relying on manually parsing the incoming Cookie header.
-  const cookieStore = await cookies();
-  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null;
+function readCookieFromHeader(cookieHeader: string, name: string): string | null {
+  for (const part of cookieHeader.split(";")) {
+    const index = part.indexOf("=");
+    if (index < 0 || part.slice(0, index).trim() !== name) continue;
+    const rawValue = part.slice(index + 1).trim();
+    if (!rawValue) return null;
+    try {
+      return decodeURIComponent(rawValue);
+    } catch {
+      return rawValue;
+    }
+  }
+  return null;
+}
+
+/**
+ * Read the session from the actual API request first. Next.js cookies() is a
+ * fallback for runtimes/adapters that expose request cookies through its
+ * request store but omit them from the plain Request headers wrapper.
+ */
+export async function getAdminSessionToken(request: Request): Promise<string | null> {
+  const fromHeader = readCookieFromHeader(
+    request.headers.get("cookie") || "",
+    ADMIN_SESSION_COOKIE
+  );
+  if (fromHeader) return fromHeader;
+
+  try {
+    const cookieStore = await cookies();
+    return cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function requireAdmin(request: Request) {
+  const token = await getAdminSessionToken(request);
   const discordId = verifyAdminSession(token);
 
   if (!discordId) {
     return NextResponse.json(
-      { error: "Discord authentication required. Sign in with an authorized VMF account." },
-      { status: 401 }
+      { error: "Discord authentication required. Your VMF admin session cookie is missing, expired, or invalid. Sign out and sign in again." },
+      { status: 401, headers: { "Cache-Control": "no-store" } }
     );
   }
 
@@ -96,7 +128,7 @@ export async function requireAdmin(_request: Request) {
   if (!allowed) {
     return NextResponse.json(
       { error: "Access denied. You need the Commissioner or Staff role in the VMF Discord server." },
-      { status: 403 }
+      { status: 403, headers: { "Cache-Control": "no-store" } }
     );
   }
 

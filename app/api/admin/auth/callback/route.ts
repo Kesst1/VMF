@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     });
     success.cookies.set("vmf_admin_session", session, {
       httpOnly: true,
-      secure: request.nextUrl.protocol === "https:",
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 8 * 60 * 60,

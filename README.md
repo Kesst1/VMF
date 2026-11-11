@@ -47,3 +47,8 @@ All commands retain the exact Admin role gate configured in the bot file.
 - `/vmf delete_all confirmation`: permanently deletes all match events, match reports, fixtures, competition registrations, competitions, and global teams. The confirmation must be exactly `DELETE ALL VMF`. This does not delete verified Discord/Roblox accounts or activity logs.
 
 The bulk endpoints are `/api/admin/competition-teams/bulk` (POST and DELETE) and `/api/admin/delete-all` (POST). They require the existing `ADMIN_API_KEY` header.
+
+
+## Admin Discord session troubleshooting
+
+The admin API reads `vmf_admin_session` from the incoming request Cookie header and falls back to Next.js `cookies()`. The result submission request explicitly includes credentials and disables caching. After deploying changes to the OAuth callback or session verification, sign out of `/admin`, sign in again, and then retry. Ensure `ADMIN_SESSION_SECRET` is the same stable value for Production across deployments and is at least 32 characters. Do not rotate it between sign-in and API requests.
