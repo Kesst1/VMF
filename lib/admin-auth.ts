@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const ADMIN_SESSION_COOKIE = "vmf_admin_session";
@@ -77,20 +78,11 @@ export async function isAdminSessionAuthorized(token?: string | null): Promise<b
   return discordId ? checkDiscordAdmin(discordId) : false;
 }
 
-function readCookie(request: Request, name: string): string | null {
-  const cookieHeader = request.headers.get("cookie") || "";
-  for (const part of cookieHeader.split(";")) {
-    const index = part.indexOf("=");
-    if (index < 0) continue;
-    if (part.slice(0, index).trim() === name) {
-      try { return decodeURIComponent(part.slice(index + 1).trim()); } catch { return null; }
-    }
-  }
-  return null;
-}
-
-export async function requireAdmin(request: Request) {
-  const token = readCookie(request, ADMIN_SESSION_COOKIE);
+export async function requireAdmin(_request: Request) {
+  // Use Next.js cookie storage, matching the method used by app/admin/layout.tsx.
+  // This avoids relying on manually parsing the incoming Cookie header.
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null;
   const discordId = verifyAdminSession(token);
 
   if (!discordId) {
