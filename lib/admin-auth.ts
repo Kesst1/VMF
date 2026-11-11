@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const ADMIN_SESSION_COOKIE = "vmf_admin_session";
@@ -98,13 +99,24 @@ function readCookieFromHeader(cookieHeader: string, name: string): string | null
  * fallback for runtimes/adapters that expose request cookies through its
  * request store but omit them from the plain Request headers wrapper.
  */
-export async function getAdminSessionToken(request: Request): Promise<string | null> {
+export async function getAdminSessionToken(request: Request | NextRequest): Promise<string | null> {
+  // NextRequest exposes a parsed cookie store. Prefer it over manually parsing
+  // headers because Next.js/Vercel adapters may wrap the incoming Request.
+  try {
+    const nextRequest = request as NextRequest;
+    const fromNextRequest = nextRequest.cookies?.get(ADMIN_SESSION_COOKIE)?.value;
+    if (fromNextRequest) return fromNextRequest;
+  } catch {
+    // Continue with the standard Request header fallback.
+  }
+
   const fromHeader = readCookieFromHeader(
     request.headers.get("cookie") || "",
     ADMIN_SESSION_COOKIE
   );
   if (fromHeader) return fromHeader;
 
+  // Next.js 15 request-scoped cookie store fallback.
   try {
     const cookieStore = await cookies();
     return cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null;

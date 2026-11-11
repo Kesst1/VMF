@@ -37,3 +37,8 @@ The bot must remain in the VMF server and retain permission to read guild member
 ## Deploy
 
 After setting the variables, redeploy the Vercel project. Visit `/admin` and select **Continue with Discord**. An account without either allowed role is denied. The session cookie is HTTP-only, secure on HTTPS, SameSite=Lax, and expires after eight hours.
+
+
+## Session cookie handling update
+
+Admin API routes read `vmf_admin_session` from the parsed `NextRequest.cookies` store first, then fall back to the raw Cookie header and the Next.js request cookie store. Admin API routes that use the HMAC session helper explicitly run on the Node.js runtime. After deploying, sign out and sign in again.

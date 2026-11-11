@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
 
+export const runtime = "nodejs";
 type Team = { team_id: string; name: string };
 type Match = { home: string; away: string };
 

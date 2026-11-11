@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
 
+export const runtime = "nodejs";
 const FORMATS = ["league", "table_elimination", "elimination", "champions"] as const;
 
 export async function POST(req: Request) {
