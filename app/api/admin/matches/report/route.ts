@@ -28,7 +28,12 @@ async function generateNextKnockoutRound(competitionId: string) {
       const thirds=ranked.map(([,g])=>g[2]).filter(Boolean).sort((a,b)=>b.points-a.points||b.gd-a.gd||b.gf-a.gf||String(a.name).localeCompare(String(b.name)));
       const qualified=[...ranked.flatMap(([,g])=>g.slice(0,2)),...thirds.slice(0,2)];
       for(let i=0;i<4;i++) matches.push({home:qualified[i].team_id,away:qualified[qualified.length-1-i].team_id});
-    } else if(ranked.length===4){
+    } else if(ranked.length===4 && ranked.every(([,g])=>g.length===3)){
+      // 12 teams in four groups of three: top two from every group qualify (8 total).
+      const qualified=ranked.flatMap(([,g])=>g.slice(0,2));
+      for(let i=0;i<4;i++) matches.push({home:qualified[i].team_id,away:qualified[qualified.length-1-i].team_id});
+      round='Quarter-finals';
+    } else if(ranked.length===4 && ranked.every(([,g])=>g.length===4)){
       const winners=ranked.map(([,g])=>g[0]);
       for(const winner of winners) await sql`INSERT INTO competition_bracket_byes (competition_id,team_id,enters_round) VALUES (${competitionId},${winner.team_id},'Quarter-finals') ON CONFLICT DO NOTHING`;
       for(let i=0;i<4;i++){ const runner=ranked[i][1][1], third=ranked[(i+1)%4][1][2]; matches.push({home:runner.team_id,away:third.team_id}); }
