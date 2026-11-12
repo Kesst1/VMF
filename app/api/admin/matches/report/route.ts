@@ -88,9 +88,25 @@ export async function POST(req: Request) {
       );
     }
 
+    const goalScorers = Array.isArray(body.goal_scorers) ? body.goal_scorers.map((v: unknown) => String(v).trim()).filter(Boolean) : [];
+    const assists = Array.isArray(body.assists) ? body.assists.map((v: unknown) => String(v).trim()).filter(Boolean) : [];
+    if (goalScorers.length && goalScorers.length !== homeScore + awayScore) {
+      return NextResponse.json({ error: `Enter one goal scorer for each goal (${homeScore + awayScore} names expected), or leave the scorer field empty.` }, { status: 400 });
+    }
+    if (assists.length > goalScorers.length) {
+      return NextResponse.json({ error: "There cannot be more assists than recorded goals." }, { status: 400 });
+    }
+
     const target = await sql`SELECT competition_id, stage FROM fixtures WHERE id=${fixtureId} LIMIT 1`;
     if (!target.length) return NextResponse.json({ error: "Fixture not found." }, { status: 404 });
     if (target[0].stage === "knockout" && homeScore === awayScore) return NextResponse.json({ error: "Knockout matches cannot finish level. Enter a decisive score after extra time / penalties." }, { status: 400 });
+
+    // Resolve every entered name before confirming the fixture, so a typo cannot leave a confirmed result without its events.
+    const allNames = [...new Set([...goalScorers, ...assists])];
+    const verified = allNames.length ? await sql`SELECT roblox_id, roblox_username FROM verified_users WHERE LOWER(roblox_username)=ANY(${allNames.map((n: string) => n.toLowerCase())})` : [];
+    const byName = new Map((verified as any[]).map(p => [String(p.roblox_username).toLowerCase(), p]));
+    const missing = allNames.filter((name: string) => !byName.has(name.toLowerCase()));
+    if (missing.length) return NextResponse.json({ error: `These players are not verified or their Roblox usernames do not match: ${missing.join(", ")}.` }, { status: 400 });
 
     const rows = await sql`
       UPDATE fixtures
@@ -110,6 +126,16 @@ export async function POST(req: Request) {
         { error: "Fixture not found or already confirmed." },
         { status: 404 }
       );
+    }
+
+    // Store goals and assists using verified Roblox IDs. No minute field is required.
+    for (const name of goalScorers) {
+      const player = byName.get(name.toLowerCase());
+      await sql`INSERT INTO match_events (fixture_id, roblox_id, player_name, event_type) VALUES (${fixtureId}, ${String(player.roblox_id)}, ${String(player.roblox_username)}, 'goal')`;
+    }
+    for (const name of assists) {
+      const player = byName.get(name.toLowerCase());
+      await sql`INSERT INTO match_events (fixture_id, roblox_id, player_name, event_type) VALUES (${fixtureId}, ${String(player.roblox_id)}, ${String(player.roblox_username)}, 'assist')`;
     }
 
     let nextRound = null;

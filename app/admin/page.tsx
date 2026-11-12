@@ -15,6 +15,8 @@ export default function Admin() {
   const [loadingFixtures, setLoadingFixtures] = useState(false);
   const [homeScore, setHomeScore] = useState("0");
   const [awayScore, setAwayScore] = useState("0");
+  const [goalScorers, setGoalScorers] = useState("");
+  const [assistPlayers, setAssistPlayers] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -62,11 +64,11 @@ export default function Admin() {
     if (!Number.isInteger(h) || !Number.isInteger(a) || h < 0 || a < 0 || h > 99 || a > 99) { setMessage("Introduce goles válidos (0–99)."); return; }
     setBusy(true); setMessage("");
     try {
-      const response = await fetch("/api/admin/matches/report", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", cache: "no-store", body: JSON.stringify({ fixture_id: fixtureId, home_score: h, away_score: a }) });
+      const response = await fetch("/api/admin/matches/report", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", cache: "no-store", body: JSON.stringify({ fixture_id: fixtureId, home_score: h, away_score: a, goal_scorers: goalScorers.split(/[\n,]+/).map(v => v.trim()).filter(Boolean), assists: assistPlayers.split(/[\n,]+/).map(v => v.trim()).filter(Boolean) }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "No se pudo guardar el resultado.");
       setMessage(`Resultado guardado y confirmado: ${data.fixture.fixture_code || selectedFixture?.fixture_code || "fixture"}.`);
-      setFixtures(current => current.filter(f => f.id !== fixtureId)); setFixtureId(""); setHomeScore("0"); setAwayScore("0");
+      setFixtures(current => current.filter(f => f.id !== fixtureId)); setFixtureId(""); setHomeScore("0"); setAwayScore("0"); setGoalScorers(""); setAssistPlayers("");
     } catch (e) { setMessage(e instanceof Error ? e.message : "Error inesperado."); }
     finally { setBusy(false); }
   }
@@ -106,6 +108,12 @@ export default function Admin() {
           <div className="score-separator">–</div>
           <div><label className="admin-label" htmlFor="away-score">{selectedFixture?.away_name || "Away team"}</label><input id="away-score" className="admin-input score-input" type="number" min="0" max="99" step="1" value={awayScore} onChange={e => setAwayScore(e.target.value)} disabled={!selectedFixture} /></div>
         </div>
+        <label className="admin-label" htmlFor="goal-scorers">Goal scorers · Roblox usernames</label>
+        <textarea id="goal-scorers" className="admin-input event-input" value={goalScorers} onChange={e => setGoalScorers(e.target.value)} placeholder="One player per goal, e.g.\nPlayerOne\nPlayerTwo" disabled={!selectedFixture} />
+        <p className="fixture-count">Write one Roblox username per goal. No minutes required.</p>
+        <label className="admin-label" htmlFor="assist-players">Assists · Roblox usernames</label>
+        <textarea id="assist-players" className="admin-input event-input" value={assistPlayers} onChange={e => setAssistPlayers(e.target.value)} placeholder="One player per assist, e.g.\nPlayerThree\nPlayerFour" disabled={!selectedFixture} />
+        <p className="fixture-count">Leave blank for goals without recorded assists. Use one username per assist.</p>
         <button className="admin-submit" type="button" onClick={submitResult} disabled={busy || !fixtureId}>{busy ? "Submitting…" : "Submit & Confirm"}</button>
         {message && <p className="admin-message" role="status">{message}</p>}
       </div>
@@ -115,6 +123,7 @@ export default function Admin() {
       .admin-label{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 8px;color:var(--foreground)}
       .admin-input{width:100%;min-height:46px;padding:11px 13px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--foreground);font:inherit}
       .fixture-count{margin:8px 0 0;color:var(--muted);font-size:12px}
+      .event-input{min-height:88px;resize:vertical;font:inherit}
       .selected-match{margin:18px 0 12px;padding:18px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
       .selected-match-label{display:block;font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--muted);margin-bottom:12px}
       .selected-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;text-align:center}
