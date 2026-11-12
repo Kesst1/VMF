@@ -11,7 +11,7 @@ This package includes the VMF website project plus an updated Discord bridge (`v
 Champions ranking uses points, goal difference, then goals scored. The API exposes `direct` (top 8) and `repechage` (remaining ranking). Repechage is ranking-only, not matches.
 
 ## Database
-Run `database/champions-format-migration.sql` in Neon before deploying. Back up the database first. It adds `group_name` to `competition_teams` and `stage`, `group_name`, `round_name` to `fixtures`.
+Run `database/champions-format-migration.sql` in Neon before deploying. Back up the database first. It adds `group_name` to `competition_teams`, `stage`, `group_name`, `round_name` to `fixtures`, and the `competition_bracket_byes` table used for direct quarter-final qualification.
 
 ## Deploy
 1. Keep existing Vercel environment variables and secrets.
@@ -28,7 +28,7 @@ All commands retain the exact Admin role gate configured in the bot file.
 
 ## Safety/limitations in this version
 - Deleting a competition or removing a team is blocked after any fixture is live, submitted or confirmed.
-- `table_elimination` currently generates only the table stage; knockout generation is not automated yet.
+- `table_elimination` automatically generates its knockout bracket after every group fixture is confirmed. The 12-team format qualifies the top two from each group plus the two best third-placed teams; the 16-team format qualifies the top three per group, with group winners receiving quarter-final byes. Knockout rounds advance automatically after all results in the current round are confirmed.
 - `elimination` creates first-round pairings but does not yet advance winners automatically.
 - Champions top-8/repechage calculation is a ranking output; bracket creation is not yet automated.
 - Run a staging test before replacing the live deployment.

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PageHeading } from "@/components/SiteShell";
 
 type Competition = { id: string; name: string; season?: string | null };
-type Fixture = { id: string; fixture_code: string; competition_id: string; home_name: string; away_name: string; home_score?: number | null; away_score?: number | null; status: string; matchday?: number | null; };
+type Fixture = { id: string; fixture_code: string; competition_id: string; home_name: string; away_name: string; home_score?: number | null; away_score?: number | null; status: string; matchday?: number | null; round_name?: string | null; stage?: string | null; };
 
 export default function Admin() {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
@@ -53,7 +53,7 @@ export default function Admin() {
     const query = fixtureSearch.trim().toLowerCase();
     if (!query) return fixtures;
     return fixtures.filter(f =>
-      `${f.fixture_code} ${f.home_name} ${f.away_name} ${f.matchday ? `md ${f.matchday}` : ""}`.toLowerCase().includes(query)
+      `${f.fixture_code} ${f.home_name} ${f.away_name} ${f.matchday ? `md ${f.matchday}` : ""} ${f.round_name || ""}`.toLowerCase().includes(query)
     );
   }, [fixtures, fixtureSearch]);
   async function submitResult() {
@@ -93,13 +93,13 @@ export default function Admin() {
         <label className="admin-label" htmlFor="fixture">Select exact match</label>
         <select id="fixture" className="admin-input" value={fixtureId} onChange={e => { setFixtureId(e.target.value); setHomeScore("0"); setAwayScore("0"); }} disabled={!competitionId || loadingFixtures || !filteredFixtures.length}>
           <option value="">{loadingFixtures ? "Loading fixtures…" : !fixtures.length ? "No pending fixtures in this competition" : !filteredFixtures.length ? "No matches found" : "Choose a fixture"}</option>
-          {filteredFixtures.map(f => <option key={f.id} value={f.id}>{f.fixture_code} · {f.home_name} vs {f.away_name}{f.matchday ? ` · MD ${f.matchday}` : ""}</option>)}
+          {filteredFixtures.map(f => <option key={f.id} value={f.id}>{f.fixture_code} · {f.home_name} vs {f.away_name}{f.matchday ? ` · MD ${f.matchday}` : f.round_name ? ` · ${f.round_name}` : ""}</option>)}
         </select>
         {competitionId && !loadingFixtures && <p className="fixture-count">{fixtures.length} pending {fixtures.length === 1 ? "fixture" : "fixtures"}{fixtureSearch.trim() ? ` · ${filteredFixtures.length} matching your search` : " available"}</p>}
         {selectedFixture && <div className="selected-match">
           <span className="selected-match-label">SELECTED MATCH</span>
           <div className="selected-teams"><strong>{selectedFixture.home_name}</strong><span>VS</span><strong>{selectedFixture.away_name}</strong></div>
-          <span className="selected-match-meta">{selectedFixture.fixture_code}{selectedFixture.matchday ? ` · Matchday ${selectedFixture.matchday}` : ""}</span>
+          <span className="selected-match-meta">{selectedFixture.fixture_code}{selectedFixture.matchday ? ` · Matchday ${selectedFixture.matchday}` : selectedFixture.round_name ? ` · ${selectedFixture.round_name}` : ""}</span>
         </div>}
         <div className="admin-score-grid">
           <div><label className="admin-label" htmlFor="home-score">{selectedFixture?.home_name || "Home team"}</label><input id="home-score" className="admin-input score-input" type="number" min="0" max="99" step="1" value={homeScore} onChange={e => setHomeScore(e.target.value)} disabled={!selectedFixture} /></div>
