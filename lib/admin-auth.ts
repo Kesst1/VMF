@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import type { NextRequest } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const ADMIN_SESSION_COOKIE = "vmf_admin_session";
@@ -99,24 +98,13 @@ function readCookieFromHeader(cookieHeader: string, name: string): string | null
  * fallback for runtimes/adapters that expose request cookies through its
  * request store but omit them from the plain Request headers wrapper.
  */
-export async function getAdminSessionToken(request: Request | NextRequest): Promise<string | null> {
-  // NextRequest exposes a parsed cookie store. Prefer it over manually parsing
-  // headers because Next.js/Vercel adapters may wrap the incoming Request.
-  try {
-    const nextRequest = request as NextRequest;
-    const fromNextRequest = nextRequest.cookies?.get(ADMIN_SESSION_COOKIE)?.value;
-    if (fromNextRequest) return fromNextRequest;
-  } catch {
-    // Continue with the standard Request header fallback.
-  }
-
+export async function getAdminSessionToken(request: Request): Promise<string | null> {
   const fromHeader = readCookieFromHeader(
     request.headers.get("cookie") || "",
     ADMIN_SESSION_COOKIE
   );
   if (fromHeader) return fromHeader;
 
-  // Next.js 15 request-scoped cookie store fallback.
   try {
     const cookieStore = await cookies();
     return cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null;
@@ -145,4 +133,26 @@ export async function requireAdmin(request: Request) {
   }
 
   return null;
+}
+
+
+/**
+ * Authorize either a normal VMF Discord admin session (website) or a
+ * server-to-server request authenticated with ADMIN_API_KEY (Discord bot).
+ * The API key is never exposed to browser code.
+ */
+export async function requireAdminOrApiKey(request: Request) {
+  const providedKey = request.headers.get("x-admin-api-key");
+  const serverKey = process.env.ADMIN_API_KEY;
+
+  if (providedKey && serverKey && serverKey.length >= 32) {
+    const provided = Buffer.from(providedKey, "utf8");
+    const expected = Buffer.from(serverKey, "utf8");
+
+    if (provided.length === expected.length && timingSafeEqual(provided, expected)) {
+      return null;
+    }
+  }
+
+  return await requireAdmin(request);
 }

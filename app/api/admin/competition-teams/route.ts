@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdminOrApiKey } from "@/lib/admin-auth";
 
-export const runtime = "nodejs";
 export async function POST(req: Request) {
- const denied=await requireAdmin(req); if(denied)return denied;
+ const denied=await requireAdminOrApiKey(req); if(denied)return denied;
  try {
   const b=await req.json(); const competitionId=String(b.competition_id||"").trim();
   const teamName=String(b.team_name||"").trim(); const groupName=b.group_name ? String(b.group_name).trim().toUpperCase() : null;
@@ -20,7 +19,7 @@ export async function POST(req: Request) {
  } catch(e) { console.error(e); return NextResponse.json({error:"Could not add team"},{status:500}); }
 }
 export async function DELETE(req: Request) {
- const denied=await requireAdmin(req); if(denied)return denied;
+ const denied=await requireAdminOrApiKey(req); if(denied)return denied;
  try {
   const {searchParams}=new URL(req.url); const competition_id=searchParams.get("competition_id"); const team_name=searchParams.get("team_name");
   if(!competition_id||!team_name)return NextResponse.json({error:"competition_id and team_name are required"},{status:400});

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdminOrApiKey } from "@/lib/admin-auth";
 
-export const runtime = "nodejs";
 type Team = { team_id: string; name: string };
 type Match = { home: string; away: string };
 
@@ -29,7 +28,7 @@ function roundRobin(teamIds: string[]): Match[][] {
 }
 
 export async function POST(req: Request) {
-  const denied = await requireAdmin(req);
+  const denied = await requireAdminOrApiKey(req);
   if (denied) return denied;
 
   try {

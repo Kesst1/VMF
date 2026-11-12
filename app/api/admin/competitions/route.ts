@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdminOrApiKey } from "@/lib/admin-auth";
 
-export const runtime = "nodejs";
 const FORMATS = ["league", "table_elimination", "elimination", "champions"] as const;
 
 export async function POST(req: Request) {
-  const denied = await requireAdmin(req); if (denied) return denied;
+  const denied = await requireAdminOrApiKey(req); if (denied) return denied;
   try {
     const b = await req.json();
     if (typeof b.name !== "string" || !b.name.trim()) return NextResponse.json({error:"name is required"},{status:400});
@@ -18,7 +17,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const denied = await requireAdmin(req); if (denied) return denied;
+  const denied = await requireAdminOrApiKey(req); if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url); const id = searchParams.get("id");
     if (!id) return NextResponse.json({error:"id is required"},{status:400});

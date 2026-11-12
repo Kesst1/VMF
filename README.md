@@ -52,3 +52,18 @@ The bulk endpoints are `/api/admin/competition-teams/bulk` (POST and DELETE) and
 ## Admin Discord session troubleshooting
 
 The admin API reads `vmf_admin_session` from the incoming request Cookie header and falls back to Next.js `cookies()`. The result submission request explicitly includes credentials and disables caching. After deploying changes to the OAuth callback or session verification, sign out of `/admin`, sign in again, and then retry. Ensure `ADMIN_SESSION_SECRET` is the same stable value for Production across deployments and is at least 32 characters. Do not rotate it between sign-in and API requests.
+
+## Wispbyte setup
+
+See [`WISPBYTE_SETUP.md`](./WISPBYTE_SETUP.md) for the two bot-to-website
+variables confirmed by this website project and for the items that must be
+verified against the separate Discord bot source. The bot source file
+`vmf_web.py` is referenced by older project notes but is not included in this
+website archive.
+
+## Temporary cookie diagnostics
+
+`/api/admin/auth/cookie-check` reports whether the admin session cookie is
+visible through the request cookie parser, raw request header, and Next.js
+`cookies()` store. It never returns the cookie value. Remove this diagnostic
+route after authentication troubleshooting is complete.
