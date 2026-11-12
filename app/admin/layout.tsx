@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { isAdminSessionAuthorized } from "@/lib/admin-auth";
 
@@ -30,7 +29,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <>
       <div className="container" style={{ display: "flex", justifyContent: "flex-end", paddingTop: 18 }}>
-        <Link href="/api/admin/auth/logout" style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>SIGN OUT ↗</Link>
+        <a href="/api/admin/auth/logout" style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>SIGN OUT ↗</a>
       </div>
       {children}
     </>

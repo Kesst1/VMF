@@ -1,6 +1,6 @@
 # VMF Admin — Discord role access
 
-The `/admin` page and browser-based management requests are protected by Discord OAuth2 and a live role check. Management API routes also accept the private `x-admin-api-key` header for trusted server-to-server requests from the VMF Discord bot.
+The `/admin` page and every `/api/admin/*` management endpoint are protected by Discord OAuth2 and a live role check against the official VMF Discord server.
 
 ## Allowed roles
 
@@ -8,7 +8,7 @@ The `/admin` page and browser-based management requests are protected by Discord
 - Staff: `1457406868136788193`
 - Guild: `1457406867960762583`
 
-Only members who currently have one of those two roles can enter the admin workspace through the website. Website API requests are checked against Discord on every request. The bot can call the management endpoints using `ADMIN_API_KEY`; keep this key only in server-side environment variables. Never expose it to browser code.
+Only members who currently have one of those two roles can enter the admin workspace or use its management APIs. Role membership is checked with the Discord bot on every protected request, so removing a role revokes access without waiting for the eight-hour session to expire.
 
 ## Vercel environment variables
 
@@ -22,7 +22,7 @@ Add these in **Vercel → Project → Settings → Environment Variables** for P
 | `DISCORD_BOT_TOKEN` | Existing private bot token; keep it server-side only. |
 | `ADMIN_SESSION_SECRET` | A new random secret of at least 32 characters. Generate one with `openssl rand -base64 48`. |
 
-Keep the existing `DATABASE_URL` and Roblox OAuth variables. `ADMIN_API_KEY` must be configured in Vercel and Wispbyte with exactly the same private value. The bot sends it as `x-admin-api-key` to the protected management APIs. The website continues to use the Discord session cookie.
+Keep the existing `DATABASE_URL` and Roblox OAuth variables. `ADMIN_API_KEY` is still used by the separate Discord-to-Roblox verification-management endpoints; it is no longer used by the `/admin` workspace or its fixture-management APIs.
 
 ## Discord Developer Portal
 

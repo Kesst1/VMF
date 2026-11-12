@@ -137,9 +137,8 @@ export async function requireAdmin(request: Request) {
 
 
 /**
- * Authorize either a normal VMF Discord admin session (website) or a
- * server-to-server request authenticated with ADMIN_API_KEY (Discord bot).
- * The API key is never exposed to browser code.
+ * Allows trusted server-to-server bot requests using ADMIN_API_KEY, while
+ * preserving Discord cookie + role authentication for browser requests.
  */
 export async function requireAdminOrApiKey(request: Request) {
   const providedKey = request.headers.get("x-admin-api-key");
@@ -154,5 +153,5 @@ export async function requireAdminOrApiKey(request: Request) {
     }
   }
 
-  return await requireAdmin(request);
+  return requireAdmin(request);
 }
