@@ -108,12 +108,11 @@ export async function POST(req: Request) {
     }
 
     if (format === "table_elimination") {
-      // 12 teams: 3 groups of 4. 16 teams: 4 groups of 4.
-      const groupNames = teams.length === 12
-        ? ["A", "B", "C"]
-        : ["A", "B", "C", "D"];
+      // 12 teams: 4 groups of 3. 16 teams: 4 groups of 4.
+      const groupNames = ["A", "B", "C", "D"];
+      const teamsPerGroup = teams.length === 12 ? 3 : 4;
       for (let index = 0; index < teams.length; index++) {
-        const groupName = groupNames[Math.floor(index / 4)];
+        const groupName = groupNames[Math.floor(index / teamsPerGroup)];
         await sql`
           UPDATE competition_teams
           SET group_name = ${groupName}
@@ -122,7 +121,8 @@ export async function POST(req: Request) {
       }
 
       for (const groupName of groupNames) {
-        const members = teams.slice(groupNames.indexOf(groupName) * 4, groupNames.indexOf(groupName) * 4 + 4);
+        const start = groupNames.indexOf(groupName) * teamsPerGroup;
+        const members = teams.slice(start, start + teamsPerGroup);
         await insertRounds(roundRobin(members.map(team => team.team_id)), "group", groupName);
       }
     } else if (format === "champions") {
@@ -161,13 +161,13 @@ export async function POST(req: Request) {
       created,
       matchdays,
       groups: format === "table_elimination"
-        ? (teams.length === 12 ? ["A", "B", "C"] : ["A", "B", "C", "D"])
+        ? ["A", "B", "C", "D"]
         : undefined,
       qualified_total: format === "table_elimination" ? (teams.length === 12 ? 8 : 12) : undefined,
       uefa_format: format === "champions" ? { league_matches_per_team: 4, direct_qualifiers: 8, repechage_qualifiers: 4, total_knockout_teams: 12 } : undefined,
       qualification_rule: format === "table_elimination"
         ? (teams.length === 12
-            ? "Top two in each group plus the two best third-placed teams by goal difference"
+            ? "Top two in each of four groups qualify (8 total); all third-placed teams are eliminated"
             : "Top three in each group")
         : undefined
     });
