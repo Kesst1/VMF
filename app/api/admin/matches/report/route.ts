@@ -6,8 +6,26 @@ import { requireAdminOrApiKey } from "@/lib/admin-auth";
 
 async function generateNextKnockoutRound(competitionId: string) {
   const compRows = await sql`SELECT format FROM competitions WHERE id=${competitionId} LIMIT 1`;
-  if (!compRows.length || String(compRows[0].format) !== "table_elimination") return null;
+  if (!compRows.length || !["table_elimination", "champions"].includes(String(compRows[0].format))) return null;
+  const isUEFA = String(compRows[0].format) === "champions";
   const existing = await sql`SELECT id, round_name, status, home_team_id, away_team_id, home_score, away_score FROM fixtures WHERE competition_id=${competitionId} AND stage='knockout' ORDER BY created_at, id`;
+  if (!existing.length && isUEFA) {
+    const counts = await sql`SELECT COUNT(*)::int total, COUNT(*) FILTER (WHERE status='confirmed')::int confirmed FROM fixtures WHERE competition_id=${competitionId} AND stage <> 'knockout'`;
+    if (!counts[0] || counts[0].total === 0 || counts[0].total !== counts[0].confirmed) return null;
+    const teams = await sql`SELECT ct.team_id, t.name,
+      COALESCE(SUM(CASE WHEN f.home_team_id=ct.team_id THEN f.home_score WHEN f.away_team_id=ct.team_id THEN f.away_score ELSE 0 END),0)::int gf,
+      COALESCE(SUM(CASE WHEN f.home_team_id=ct.team_id THEN f.away_score WHEN f.away_team_id=ct.team_id THEN f.home_score ELSE 0 END),0)::int ga,
+      COUNT(f.id) FILTER(WHERE (f.home_team_id=ct.team_id AND f.home_score>f.away_score) OR (f.away_team_id=ct.team_id AND f.away_score>f.home_score))::int won,
+      COUNT(f.id) FILTER(WHERE f.home_score=f.away_score)::int drawn
+      FROM competition_teams ct JOIN teams t ON t.id=ct.team_id
+      LEFT JOIN fixtures f ON f.competition_id=ct.competition_id AND f.stage <> 'knockout' AND f.status='confirmed' AND (f.home_team_id=ct.team_id OR f.away_team_id=ct.team_id)
+      WHERE ct.competition_id=${competitionId} GROUP BY ct.team_id,t.name`;
+    const ranked = (teams as any[]).map(t=>({...t,gd:t.gf-t.ga,points:t.won*3+t.drawn})).sort((a,b)=>b.points-a.points||b.gd-a.gd||b.gf-a.gf||String(a.name).localeCompare(String(b.name)));
+    if (ranked.length !== 16) return null;
+    // Places 9-16 play the first repechage round: 9v16, 10v15, 11v14, 12v13.
+    for (let i=0;i<4;i++) await sql`INSERT INTO fixtures (competition_id,home_team_id,away_team_id,round_name,stage,group_name,status,created_at,updated_at) VALUES (${competitionId},${ranked[8+i].team_id},${ranked[15-i].team_id},'Repechage','knockout',NULL,'scheduled',NOW(),NOW())`;
+    return 'Repechage';
+  }
   if (!existing.length) {
     const counts = await sql`SELECT COUNT(*)::int total, COUNT(*) FILTER (WHERE status='confirmed')::int confirmed FROM fixtures WHERE competition_id=${competitionId} AND stage='group'`;
     if (!counts[0] || counts[0].total === 0 || counts[0].total !== counts[0].confirmed) return null;
@@ -42,7 +60,7 @@ async function generateNextKnockoutRound(competitionId: string) {
     for(const m of matches) await sql`INSERT INTO fixtures (competition_id,home_team_id,away_team_id,round_name,stage,group_name,status,created_at,updated_at) VALUES (${competitionId},${m.home},${m.away},${round},'knockout',NULL,'scheduled',NOW(),NOW())`;
     return round;
   }
-  const order=['Round of 12','Quarter-finals','Semi-finals','Final'];
+  const order=isUEFA?['Repechage','Play-off','Quarter-finals','Semi-finals','Final']:['Round of 12','Quarter-finals','Semi-finals','Final'];
   const completedRounds=order.filter(r=>existing.some((f:any)=>f.round_name===r));
   const latest=completedRounds[completedRounds.length-1];
   if(!latest) return null;
@@ -51,6 +69,31 @@ async function generateNextKnockoutRound(competitionId: string) {
   if(latest==='Final') return null;
   let advancing=current.map((f:any)=>String(Number(f.home_score)>Number(f.away_score)?f.home_team_id:f.away_team_id));
   const next=order[order.indexOf(latest)+1];
+  if (isUEFA && latest === 'Repechage') {
+    // Winners face league places 5-8; lower-ranked repechage winner faces place 5.
+    const league = await sql`SELECT ct.team_id,t.name,
+      COALESCE(SUM(CASE WHEN f.home_team_id=ct.team_id THEN f.home_score WHEN f.away_team_id=ct.team_id THEN f.away_score ELSE 0 END),0)::int gf,
+      COALESCE(SUM(CASE WHEN f.home_team_id=ct.team_id THEN f.away_score WHEN f.away_team_id=ct.team_id THEN f.home_score ELSE 0 END),0)::int ga,
+      COUNT(f.id) FILTER(WHERE (f.home_team_id=ct.team_id AND f.home_score>f.away_score) OR (f.away_team_id=ct.team_id AND f.away_score>f.home_score))::int won,
+      COUNT(f.id) FILTER(WHERE f.home_score=f.away_score)::int drawn
+      FROM competition_teams ct JOIN teams t ON t.id=ct.team_id LEFT JOIN fixtures f ON f.competition_id=ct.competition_id AND f.stage <> 'knockout' AND f.status='confirmed' AND (f.home_team_id=ct.team_id OR f.away_team_id=ct.team_id)
+      WHERE ct.competition_id=${competitionId} GROUP BY ct.team_id,t.name`;
+    const ranked=(league as any[]).map(t=>({...t,gd:t.gf-t.ga,points:t.won*3+t.drawn})).sort((a,b)=>b.points-a.points||b.gd-a.gd||b.gf-a.gf||String(a.name).localeCompare(String(b.name)));
+    for(let i=0;i<4;i++) await sql`INSERT INTO fixtures (competition_id,home_team_id,away_team_id,round_name,stage,group_name,status,created_at,updated_at) VALUES (${competitionId},${ranked[4+i].team_id},${advancing[3-i]},'Play-off','knockout',NULL,'scheduled',NOW(),NOW())`;
+    return 'Play-off';
+  }
+  if (isUEFA && latest === 'Play-off') {
+    const league = await sql`SELECT ct.team_id,t.name,
+      COALESCE(SUM(CASE WHEN f.home_team_id=ct.team_id THEN f.home_score WHEN f.away_team_id=ct.team_id THEN f.away_score ELSE 0 END),0)::int gf,
+      COALESCE(SUM(CASE WHEN f.home_team_id=ct.team_id THEN f.away_score WHEN f.away_team_id=ct.team_id THEN f.home_score ELSE 0 END),0)::int ga,
+      COUNT(f.id) FILTER(WHERE (f.home_team_id=ct.team_id AND f.home_score>f.away_score) OR (f.away_team_id=ct.team_id AND f.away_score>f.home_score))::int won,
+      COUNT(f.id) FILTER(WHERE f.home_score=f.away_score)::int drawn
+      FROM competition_teams ct JOIN teams t ON t.id=ct.team_id LEFT JOIN fixtures f ON f.competition_id=ct.competition_id AND f.stage <> 'knockout' AND f.status='confirmed' AND (f.home_team_id=ct.team_id OR f.away_team_id=ct.team_id)
+      WHERE ct.competition_id=${competitionId} GROUP BY ct.team_id,t.name`;
+    const ranked=(league as any[]).map(t=>({...t,gd:t.gf-t.ga,points:t.won*3+t.drawn})).sort((a,b)=>b.points-a.points||b.gd-a.gd||b.gf-a.gf||String(a.name).localeCompare(String(b.name)));
+    for(let i=0;i<4;i++) await sql`INSERT INTO fixtures (competition_id,home_team_id,away_team_id,round_name,stage,group_name,status,created_at,updated_at) VALUES (${competitionId},${ranked[i].team_id},${advancing[3-i]},'Quarter-finals','knockout',NULL,'scheduled',NOW(),NOW())`;
+    return 'Quarter-finals';
+  }
   if(latest==='Round of 12'){
     const byes=await sql`SELECT team_id FROM competition_bracket_byes WHERE competition_id=${competitionId} AND enters_round='Quarter-finals' ORDER BY team_id`;
     advancing=[...byes.map((b:any)=>String(b.team_id)),...advancing];

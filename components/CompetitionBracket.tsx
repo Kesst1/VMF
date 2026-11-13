@@ -24,7 +24,7 @@ function MatchCard({ match }: { match: Match }) {
   );
 }
 
-export default function CompetitionBracket({ matches, theme = "classic" }: { matches: Match[]; theme?: Theme }) {
+export default function CompetitionBracket({ matches, theme = "classic", uefa = false }: { matches: Match[]; theme?: Theme; uefa?: boolean }) {
   const roundOf12 = matches.filter(m => m.round_name === "Round of 12");
   const quarters = matches.filter(m => m.round_name === "Quarter-finals");
   const semis = matches.filter(m => m.round_name === "Semi-finals");
@@ -36,10 +36,23 @@ export default function CompetitionBracket({ matches, theme = "classic" }: { mat
   const leftSemi = semis.slice(0, 1);
   const rightSemi = semis.slice(1, 2);
 
-  if (!matches.length) return <div className="empty-state"><h3>Knockout bracket not generated yet</h3><p>It will appear automatically when all group-stage fixtures have been confirmed.</p></div>;
+  if (!matches.length) return <div className="empty-state"><h3>Knockout bracket not generated yet</h3><p>{uefa ? "It will appear after all UEFA league-phase fixtures have been confirmed." : "It will appear automatically when all group-stage fixtures have been confirmed."}</p></div>;
+
+  if (uefa) {
+    const rounds = ["Repechage", "Play-off", "Quarter-finals", "Semi-finals", "Final"];
+    return <div className={`vmf-bracket-shell theme-${theme}`}>
+      <div className="vmf-bracket-topline"><span>UEFA TOURNAMENT BRACKET</span><span>ROAD TO THE FINAL</span></div>
+      <div className="vmf-uefa-rounds">{rounds.map(round => {
+        const roundMatches = matches.filter(m => m.round_name === round);
+        return <section className="vmf-uefa-round" key={round}><h3>{round.toUpperCase()}</h3>{roundMatches.length ? roundMatches.map(m => <MatchCard key={m.id} match={m} />) : <div className="vmf-bracket-placeholder">Awaiting qualification</div>}</section>;
+      })}</div>
+      <style jsx>{` .vmf-bracket-shell{border:1px solid #18243b;border-radius:8px;padding:22px;background:radial-gradient(ellipse at 50% 50%,#142c50 0%,#07162f 72%);color:#fff;overflow-x:auto}.theme-champions{--bracket-accent:#13bde8;background:radial-gradient(ellipse at 50% 50%,#173b70 0%,#07142e 75%);border-color:#173b70}.theme-europa{--bracket-accent:#72bd45;background:radial-gradient(ellipse at 50% 50%,#183d2c 0%,#07170f 75%);border-color:#254a30}.vmf-bracket-topline{display:flex;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid #ffffff25;font-size:9px;font-weight:900;letter-spacing:.18em}.vmf-uefa-rounds{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:14px;margin-top:20px;min-width:850px}.vmf-uefa-round{display:flex;flex-direction:column;justify-content:space-around;gap:16px;min-width:0}.vmf-uefa-round h3{text-align:center;font-size:9px;letter-spacing:.12em;color:#dce8f7}.vmf-bracket-match{border:1px solid #d8e0ea;border-radius:2px;background:#f7f9fc;padding:7px 10px;color:#101827}.vmf-bracket-team{display:flex;justify-content:space-between;gap:8px;min-height:25px;padding:4px 0;font-size:11px;color:#465166}.vmf-bracket-team+.vmf-bracket-team{border-top:1px solid #dfe4ec}.vmf-bracket-team.winner span,.vmf-bracket-team.winner b{font-weight:900;color:var(--bracket-accent)}.vmf-bracket-match small{display:block;margin-top:5px;padding-top:5px;border-top:1px solid #e4e8ee;color:#8b95a5;font-size:7px;font-weight:900}.vmf-bracket-placeholder{border:1px dashed var(--bracket-accent);padding:22px 8px;background:#ffffff0c;color:#fff;font-size:10px;text-align:center}</style>
+    </div>;
+  }
 
   return (
     <div className={`vmf-bracket-shell theme-${theme}`}>
+
       <div className="vmf-bracket-topline"><span>TOURNAMENT BRACKET</span><span>ROAD TO THE FINAL</span></div>
       <div className="vmf-bracket-heading"><span>{roundOf12.length ? "ROUND OF 12" : "QUARTER-FINALS"}</span><span>SEMI-FINALS</span><span>FINAL</span><span>SEMI-FINALS</span><span>{roundOf12.length ? "ROUND OF 12" : "QUARTER-FINALS"}</span></div>
       <div className="vmf-bracket-grid">
