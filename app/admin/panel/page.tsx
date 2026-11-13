@@ -123,6 +123,7 @@ export default function AdminPanel() {
 
   return <main className="container">
     <PageHeading eyebrow="VMF MANAGEMENT" title="Admin Panel." description="Create and manage competitions, teams and fixtures. All actions are protected by your Discord admin session." />
+      <div style={{display:"flex",justifyContent:"flex-end",marginTop:-18,marginBottom:22}}><Link className="button secondary" href="/admin/results">Results & match reporting ↗</Link></div>
     <div className="panel-tabs"><Link href="/admin">Match Results</Link><span className="active">Admin Panel</span><Link href="/fixtures">Fixtures</Link></div>
 
     <section className="content-section">
