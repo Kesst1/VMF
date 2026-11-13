@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { PageHeading } from "@/components/SiteShell";
+import AdminMatchResults from "@/components/AdminMatchResults";
 
 type Competition = { id: string; name: string; season?: string | null; format?: string };
 type Team = { id: string; name: string; group_name?: string | null };
@@ -130,8 +131,8 @@ export default function AdminPanel() {
 
   return <main className="container">
     <PageHeading eyebrow="VMF MANAGEMENT" title="Admin Panel." description="Create and manage competitions, teams and fixtures. All actions are protected by your Discord admin session." />
-      <div style={{display:"flex",justifyContent:"flex-end",marginTop:-18,marginBottom:22}}><Link className="button secondary" href="/admin/results">Results & match reporting ↗</Link></div>
-    <div className="panel-tabs"><Link href="/admin">Match Results</Link><span className="active">Admin Panel</span><Link href="/fixtures">Fixtures</Link></div>
+    <div className="panel-tabs"><a className="active" href="#match-results">Match Results</a><span>Admin Panel</span><Link href="/fixtures">Fixtures</Link></div>
+    <AdminMatchResults />
 
     <section className="content-section">
       <div className="panel-grid">

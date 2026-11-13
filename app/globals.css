@@ -96,3 +96,24 @@ html[data-theme="dark"] .avatar-placeholder{background:#41434a;color:#ddd}
 
 /* Competition bracket styles */
  .vmf-bracket-shell{border:1px solid #18243b;border-radius:8px;padding:22px;background:radial-gradient(ellipse at 50% 50%,#142c50 0%,#07162f 72%);color:#fff;overflow-x:auto}.theme-champions{--bracket-accent:#13bde8;background:radial-gradient(ellipse at 50% 50%,#173b70 0%,#07142e 75%);border-color:#173b70}.theme-europa{--bracket-accent:#72bd45;background:radial-gradient(ellipse at 50% 50%,#183d2c 0%,#07170f 75%);border-color:#254a30}.vmf-bracket-topline{display:flex;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid #ffffff25;font-size:9px;font-weight:900;letter-spacing:.18em}.vmf-uefa-rounds{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:14px;margin-top:20px;min-width:850px}.vmf-uefa-round{display:flex;flex-direction:column;justify-content:space-around;gap:16px;min-width:0}.vmf-uefa-round h3{text-align:center;font-size:9px;letter-spacing:.12em;color:#dce8f7}.vmf-bracket-match{border:1px solid #d8e0ea;border-radius:2px;background:#f7f9fc;padding:7px 10px;color:#101827}.vmf-bracket-team{display:flex;justify-content:space-between;gap:8px;min-height:25px;padding:4px 0;font-size:11px;color:#465166}.vmf-bracket-team+.vmf-bracket-team{border-top:1px solid #dfe4ec}.vmf-bracket-team.winner span,.vmf-bracket-team.winner b{font-weight:900;color:var(--bracket-accent)}.vmf-bracket-match small{display:block;margin-top:5px;padding-top:5px;border-top:1px solid #e4e8ee;color:#8b95a5;font-size:7px;font-weight:900}.vmf-bracket-placeholder{border:1px dashed var(--bracket-accent);padding:22px 8px;background:#ffffff0c;color:#fff;font-size:10px;text-align:center}
+
+/* VMF knockout brackets: clear round columns, readable cards and mobile scrolling. */
+.vmf-bracket-shell{--bracket-accent:#c6d4e8;border:1px solid #18243b;border-radius:12px;padding:22px;background:radial-gradient(ellipse at 50% 45%,#172d4d 0%,#07162f 76%);color:#fff;overflow:hidden}
+.theme-champions{--bracket-accent:#13bde8;background:radial-gradient(ellipse at 50% 45%,#173b70 0%,#07142e 78%);border-color:#173b70}
+.theme-europa{--bracket-accent:#82c94e;background:radial-gradient(ellipse at 50% 45%,#183d2c 0%,#07170f 78%);border-color:#254a30}
+.vmf-bracket-topline{display:flex;justify-content:space-between;gap:16px;padding-bottom:15px;border-bottom:1px solid #ffffff28;font-size:9px;font-weight:900;letter-spacing:.18em}
+.vmf-bracket-grid{display:grid;grid-template-columns:repeat(var(--bracket-rounds),minmax(190px,1fr));gap:16px;align-items:stretch;min-width:max-content;padding-top:20px}
+.vmf-bracket-round{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.vmf-bracket-round h3{margin:0 0 3px;text-align:center;color:#dce8f7;font-size:10px;line-height:1.4;letter-spacing:.14em;white-space:nowrap}
+.vmf-bracket-round-matches{display:flex;flex:1;flex-direction:column;justify-content:space-around;gap:14px;min-height:180px}
+.vmf-bracket-match{min-width:0;border:1px solid #d8e0ea;border-radius:5px;background:#f7f9fc;padding:9px 11px;color:#101827;box-shadow:0 5px 16px #00000016}
+.vmf-bracket-team{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:27px;padding:5px 0;font-size:12px;color:#465166}
+.vmf-bracket-team span{min-width:0;overflow-wrap:anywhere}
+.vmf-bracket-team b{flex:0 0 auto;font-variant-numeric:tabular-nums;color:#172033}
+.vmf-bracket-team+.vmf-bracket-team{border-top:1px solid #dfe4ec}
+.vmf-bracket-team.winner span,.vmf-bracket-team.winner b{font-weight:900;color:var(--bracket-accent)}
+.vmf-bracket-match small{display:block;margin-top:6px;padding-top:6px;border-top:1px solid #e4e8ee;color:#8b95a5;font-size:8px;font-weight:900;letter-spacing:.08em}
+.vmf-bracket-round.final .vmf-bracket-round-matches{justify-content:center}
+.vmf-bracket-round.final .vmf-bracket-match{border-color:var(--bracket-accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--bracket-accent) 28%,transparent),0 8px 24px #0003}
+.vmf-bracket-uefa .vmf-bracket-round-matches{justify-content:space-around}
+@media(max-width:700px){.vmf-bracket-shell{padding:16px}.vmf-bracket-grid{gap:12px}.vmf-bracket-round{min-width:175px}.vmf-bracket-match{padding:8px}.vmf-bracket-team{font-size:11px}}
