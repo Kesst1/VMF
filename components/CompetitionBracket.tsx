@@ -40,7 +40,7 @@ export default function CompetitionBracket({ matches, theme = "classic" }: { mat
 
   return (
     <div className={`vmf-bracket-shell theme-${theme}`}>
-      <div className="vmf-bracket-topline"><span>TOURNAMENT BRACKET</span><span>VMF · KNOCKOUT STAGE</span></div>
+      <div className="vmf-bracket-topline"><span>TOURNAMENT BRACKET</span><span>ROAD TO THE FINAL</span></div>
       <div className="vmf-bracket-heading"><span>{roundOf12.length ? "ROUND OF 12" : "QUARTER-FINALS"}</span><span>SEMI-FINALS</span><span>FINAL</span><span>SEMI-FINALS</span><span>{roundOf12.length ? "ROUND OF 12" : "QUARTER-FINALS"}</span></div>
       <div className="vmf-bracket-grid">
         <section className="vmf-bracket-round outer left">{leftOpening.map(m => <MatchCard key={m.id} match={m} />)}</section>
@@ -50,24 +50,23 @@ export default function CompetitionBracket({ matches, theme = "classic" }: { mat
         <section className="vmf-bracket-round outer right">{rightOpening.map(m => <MatchCard key={m.id} match={m} />)}</section>
       </div>
       <style jsx>{`
-        .vmf-bracket-shell{--bracket-accent:#17191d;--bracket-accent-soft:#f1f2f3;position:relative;overflow:hidden;border:1px solid #e6e7e9;border-radius:18px;padding:22px;background:linear-gradient(145deg,#fff 0%,#f8f8f8 100%);color:#17191d}
-        .theme-champions{--bracket-accent:#173b72;--bracket-accent-soft:#edf3fb;background:linear-gradient(145deg,#f8fbff,#eaf1fb);border-color:#d8e2f0}
-        .theme-europa{--bracket-accent:#167344;--bracket-accent-soft:#edf8f1;background:linear-gradient(145deg,#fbfffc,#eaf6ee);border-color:#d7eadc}
-        .vmf-bracket-topline{display:flex;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid color-mix(in srgb,var(--bracket-accent) 18%,transparent);font-size:9px;font-weight:900;letter-spacing:.16em;color:var(--bracket-accent)}
-        .vmf-bracket-heading{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1.2fr;gap:18px;margin:20px 0 13px;text-align:center;color:var(--bracket-accent);font-size:9px;font-weight:900;letter-spacing:.12em}
-        .vmf-bracket-grid{display:grid;grid-template-columns:minmax(130px,1.2fr) minmax(120px,1fr) minmax(145px,1fr) minmax(120px,1fr) minmax(130px,1.2fr);gap:18px;align-items:center;min-height:300px}
+        .vmf-bracket-shell{--bracket-accent:#111827;--bracket-line:#d8dde6;position:relative;overflow:hidden;border:1px solid #18243b;border-radius:8px;padding:22px;background:radial-gradient(ellipse at 50% 50%,#142c50 0%,#07162f 72%);color:#fff;box-shadow:0 18px 45px #07162f24}
+        .theme-champions{--bracket-accent:#13bde8;--bracket-line:#15bde8;background:radial-gradient(ellipse at 50% 50%,#173b70 0%,#07142e 75%);border-color:#173b70}
+        .theme-europa{--bracket-accent:#72bd45;--bracket-line:#80c34c;background:radial-gradient(ellipse at 50% 50%,#183d2c 0%,#07170f 75%);border-color:#254a30}
+        .vmf-bracket-topline{display:flex;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid #ffffff25;font-size:9px;font-weight:900;letter-spacing:.18em;color:#fff}
+        .vmf-bracket-heading{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1.2fr;gap:18px;margin:20px 0 13px;text-align:center;color:#dce8f7;font-size:9px;font-weight:900;letter-spacing:.12em}
+        .vmf-bracket-grid{display:grid;grid-template-columns:minmax(130px,1.2fr) minmax(120px,1fr) minmax(145px,1fr) minmax(120px,1fr) minmax(130px,1.2fr);gap:18px;align-items:center;min-height:330px}
         .vmf-bracket-round{position:relative;display:flex;flex-direction:column;justify-content:space-around;gap:22px;min-width:0;height:100%;padding:10px 0}
-        .vmf-bracket-round.outer:after{content:"";position:absolute;top:25%;bottom:25%;width:12px;border-top:1.5px solid var(--bracket-accent);border-bottom:1.5px solid var(--bracket-accent);opacity:.45;pointer-events:none}
-        .vmf-bracket-round.outer.left:after{right:-18px;border-right:1.5px solid var(--bracket-accent)}
-        .vmf-bracket-round.outer.right:after{left:-18px;border-left:1.5px solid var(--bracket-accent)}
-        .vmf-bracket-round.inner:before{content:"";position:absolute;top:50%;width:18px;border-top:1.5px solid var(--bracket-accent);opacity:.45}
-        .vmf-bracket-round.inner.left:before{right:-18px}.vmf-bracket-round.inner.right:before{left:-18px}
-        .vmf-bracket-match{position:relative;z-index:1;border:1px solid color-mix(in srgb,var(--bracket-accent) 20%,#fff);border-radius:7px;background:#fff;padding:9px 11px;min-width:0;box-shadow:0 5px 16px #1018280b}
-        .vmf-bracket-team{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:25px;padding:4px 0;font-size:11px;color:#555;min-width:0}.vmf-bracket-team+.vmf-bracket-team{border-top:1px solid #eceef0}.vmf-bracket-team span{overflow-wrap:anywhere}.vmf-bracket-team b{font-variant-numeric:tabular-nums;color:#202329}.vmf-bracket-team.winner span,.vmf-bracket-team.winner b{font-weight:900;color:var(--bracket-accent)}
-        .vmf-bracket-match small{display:block;margin-top:6px;padding-top:5px;border-top:1px solid #f0f1f2;color:#92969c;font-size:7px;font-weight:900;letter-spacing:.13em}
-        .vmf-bracket-center{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0;text-align:center}.vmf-bracket-center:before,.vmf-bracket-center:after{content:"";position:absolute;top:50%;width:18px;border-top:1.5px solid var(--bracket-accent);opacity:.45}.vmf-bracket-center:before{left:-18px}.vmf-bracket-center:after{right:-18px}
-        .vmf-bracket-placeholder{border:1px dashed color-mix(in srgb,var(--bracket-accent) 40%,#fff);border-radius:7px;padding:22px 8px;background:var(--bracket-accent-soft);color:var(--bracket-accent);font-size:10px;font-weight:800;line-height:1.7;text-align:center}
-        @media(max-width:760px){.vmf-bracket-shell{overflow-x:auto}.vmf-bracket-topline,.vmf-bracket-heading,.vmf-bracket-grid{min-width:780px}.vmf-bracket-grid{min-height:280px}}
+        .vmf-bracket-round.outer:after{content:"";position:absolute;top:25%;bottom:25%;width:12px;border-top:1.5px solid var(--bracket-line);border-bottom:1.5px solid var(--bracket-line);opacity:.8;pointer-events:none}
+        .vmf-bracket-round.outer.left:after{right:-18px;border-right:1.5px solid var(--bracket-line)}.vmf-bracket-round.outer.right:after{left:-18px;border-left:1.5px solid var(--bracket-line)}
+        .vmf-bracket-round.inner:before{content:"";position:absolute;top:50%;width:18px;border-top:1.5px solid var(--bracket-line);opacity:.8}.vmf-bracket-round.inner.left:before{right:-18px}.vmf-bracket-round.inner.right:before{left:-18px}
+        .vmf-bracket-match{position:relative;z-index:1;border:1px solid #d8e0ea;border-radius:2px;background:#f7f9fc;padding:7px 10px;min-width:0;box-shadow:0 5px 16px #0003;color:#101827}
+        .vmf-bracket-team{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:25px;padding:4px 0;font-size:11px;color:#465166;min-width:0}.vmf-bracket-team+.vmf-bracket-team{border-top:1px solid #dfe4ec}.vmf-bracket-team span{overflow-wrap:anywhere}.vmf-bracket-team b{font-variant-numeric:tabular-nums;color:#101827}.vmf-bracket-team.winner span,.vmf-bracket-team.winner b{font-weight:900;color:#087dba}
+        .theme-europa .vmf-bracket-team.winner span,.theme-europa .vmf-bracket-team.winner b{color:#287b36}
+        .vmf-bracket-match small{display:block;margin-top:5px;padding-top:5px;border-top:1px solid #e4e8ee;color:#8b95a5;font-size:7px;font-weight:900;letter-spacing:.13em}
+        .vmf-bracket-center{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0;text-align:center}.vmf-bracket-center:before,.vmf-bracket-center:after{content:"";position:absolute;top:50%;width:18px;border-top:1.5px solid var(--bracket-line);opacity:.8}.vmf-bracket-center:before{left:-18px}.vmf-bracket-center:after{right:-18px}
+        .vmf-bracket-placeholder{border:1px dashed color-mix(in srgb,var(--bracket-accent) 70%,white);border-radius:2px;padding:22px 8px;background:#ffffff0c;color:#fff;font-size:10px;font-weight:800;line-height:1.7;text-align:center}
+        @media(max-width:760px){.vmf-bracket-shell{overflow-x:auto}.vmf-bracket-topline,.vmf-bracket-heading,.vmf-bracket-grid{min-width:780px}.vmf-bracket-grid{min-height:300px}}
       `}</style>
     </div>
   );

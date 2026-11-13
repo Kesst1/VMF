@@ -114,6 +114,13 @@ export default function AdminPanel() {
     setFixtureId(""); setPostponeDate(""); setPostponeReason("");
   }, postponeDate ? "Fixture rescheduled." : "Fixture postponed.");
 
+  const resetStats = () => run(async () => {
+    const confirmation = window.prompt('This will permanently delete ALL recorded goals and assists. Type RESET VMF PLAYER STATS to continue.');
+    if (confirmation !== "RESET VMF PLAYER STATS") return;
+    const data = await api("/api/admin/reset-stats", "POST", { confirmation });
+    setMessage(`Player statistics reset. ${data.reset} event(s) deleted.`);
+  }, "Player statistics reset.");
+
   const deleteFixture = () => run(async () => {
     if (!fixtureId) throw new Error("Select a fixture.");
     if (!window.confirm("Delete this fixture and its recorded events?")) return;
@@ -169,6 +176,12 @@ export default function AdminPanel() {
           {stage !== "knockout" && <><label className="admin-label">Matchday</label><input className="admin-input" type="number" min="1" value={matchday} onChange={e => setMatchday(e.target.value)} /></>}
           {stage === "knockout" && <><label className="admin-label">Round name</label><input className="admin-input" value={roundName} onChange={e => setRoundName(e.target.value)} /></>}
           <button className="admin-submit" disabled={busy || !competitionId || teams.length < 2} onClick={createFixture}>Create fixture</button>
+        </section>
+
+        <section className="feature-card">
+          <p className="eyebrow">07 · PLAYER STATISTICS</p><h2>Reset player stats</h2>
+          <p className="panel-note">Permanently clears every recorded goal and assist. Fixtures, scores, teams and competitions are not deleted.</p>
+          <button className="danger-button" disabled={busy} onClick={resetStats}>Reset all player statistics</button>
         </section>
 
         <section className="feature-card">
