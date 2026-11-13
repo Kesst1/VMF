@@ -162,15 +162,16 @@ export default function AdminPanel() {
           <button className="danger-button" disabled={busy || !competitionId} onClick={() => generateFixtures(true)}>Replace existing fixtures</button>
         </section>
 
-        <section className="feature-card">
-          <p className="eyebrow">05 · MANUAL FIXTURE</p><h2>Create one fixture</h2><p className="panel-note">To create a bracket match, choose Knockout as the stage, select both teams, and enter the exact round name (for example: Round of 12, Quarter-finals, Semi-finals or Final). Create each pairing as a separate fixture. Results entered above will update the bracket automatically.</p>
-          <label className="admin-label">Home team</label><select className="admin-input" value={homeTeam} onChange={e => setHomeTeam(e.target.value)} disabled={!competitionId}><option value="">Select home team</option>{teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
-          <label className="admin-label">Away team</label><select className="admin-input" value={awayTeam} onChange={e => setAwayTeam(e.target.value)} disabled={!competitionId}><option value="">Select away team</option>{teams.filter(t => t.id !== homeTeam).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
-          <label className="admin-label">Stage</label><select className="admin-input" value={stage} onChange={e => setStage(e.target.value)}><option value="group">Group</option><option value="league">League</option><option value="knockout">Knockout</option></select>
-          {stage === "group" && <><label className="admin-label">Group</label><select className="admin-input" value={groupName} onChange={e => setGroupName(e.target.value)}>{["A","B","C","D"].map(g => <option key={g} value={g}>Group {g}</option>)}</select></>}
-          {stage !== "knockout" && <><label className="admin-label">Matchday</label><input className="admin-input" type="number" min="1" value={matchday} onChange={e => setMatchday(e.target.value)} /></>}
-          {stage === "knockout" && <><label className="admin-label">Round name</label><input className="admin-input" value={roundName} onChange={e => setRoundName(e.target.value)} /></>}
-          <button className="admin-submit" disabled={busy || !competitionId || teams.length < 2} onClick={createFixture}>Create fixture</button>
+        <section className="feature-card knockout-auto-card">
+          <p className="eyebrow">05 · AUTOMATIC KNOCKOUT</p><h2>Knockout fixture progression</h2>
+          <p className="panel-note">You no longer need to create Round of 12, quarter-final, semi-final or final fixtures manually. The system creates each round from the confirmed results and qualification table.</p>
+          <ol className="progression-steps">
+            <li><b>Group / league phase:</b> knockout fixtures stay hidden until every required group-stage match is confirmed.</li>
+            <li><b>First knockout round:</b> qualified teams and direct qualifiers are placed automatically.</li>
+            <li><b>Next rounds:</b> each new round appears only after every match in the previous round is confirmed.</li>
+            <li><b>Final:</b> generated automatically from the two semi-final winners.</li>
+          </ol>
+          <p className="panel-note">Use Match Results above to confirm scores. For a competition with an existing fixture list, press Generate fixtures only once; do not use manual knockout fixtures.</p>
         </section>
 
         <AdminResetStats />
@@ -193,7 +194,7 @@ export default function AdminPanel() {
       .panel-tabs{display:flex;gap:8px;align-items:center;margin:0 0 30px;border-bottom:1px solid var(--border);padding-bottom:12px;flex-wrap:wrap}
       .panel-tabs a,.panel-tabs span{padding:10px 15px;border-radius:9px;text-decoration:none;color:var(--muted);font-size:13px;font-weight:800}
       .panel-tabs .active{background:var(--foreground);color:var(--background)}
-      .panel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+      .panel-grid{columns:2;column-gap:18px;column-fill:balance;display:block}.panel-grid>.feature-card{display:inline-block;width:100%;break-inside:avoid;margin:0 0 18px;vertical-align:top}
       .feature-card h2{font-size:21px;margin:8px 0 16px}
       .admin-label{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:16px 0 7px;color:var(--foreground)}
       .admin-input{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--foreground);font:inherit}
@@ -202,10 +203,10 @@ export default function AdminPanel() {
       .danger-button{background:#a83232;color:#fff}
       button:disabled{opacity:.45;cursor:not-allowed}
       .panel-note{font-size:12px;color:var(--muted);line-height:1.6;margin:10px 0}
-      .team-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+      .progression-steps{padding-left:20px;margin:14px 0;color:var(--muted);font-size:13px;line-height:1.75}.progression-steps li{padding-left:4px;margin:7px 0}.progression-steps b{color:var(--foreground)}.team-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
       .team-chips span{font-size:11px;padding:6px 9px;border:1px solid var(--border);border-radius:99px;color:var(--muted)}
       .panel-message{padding:14px 16px;margin-top:20px;border:1px solid var(--border);border-radius:10px;font-weight:700}
-      @media(max-width:760px){.panel-grid{grid-template-columns:1fr}}
+      @media(max-width:760px){.panel-grid{columns:1}}
     `}</style>
   </main>;
 }
