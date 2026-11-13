@@ -117,3 +117,31 @@ html[data-theme="dark"] .avatar-placeholder{background:#41434a;color:#ddd}
 .vmf-bracket-round.final .vmf-bracket-match{border-color:var(--bracket-accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--bracket-accent) 28%,transparent),0 8px 24px #0003}
 .vmf-bracket-uefa .vmf-bracket-round-matches{justify-content:space-around}
 @media(max-width:700px){.vmf-bracket-shell{padding:16px}.vmf-bracket-grid{gap:12px}.vmf-bracket-round{min-width:175px}.vmf-bracket-match{padding:8px}.vmf-bracket-team{font-size:11px}}
+
+/* VMF admin controls: clear outlined actions and grouped cards. */
+.admin-submit,.danger-button{border:1px solid currentColor;box-shadow:0 2px 0 #00000012;transition:transform .16s ease,box-shadow .16s ease,background .16s ease;letter-spacing:.01em}
+.admin-submit{border-color:var(--foreground);outline:1px solid color-mix(in srgb,var(--foreground) 16%,transparent);outline-offset:2px}
+.danger-button{border:1px solid #a83232;outline:1px solid #a8323233;outline-offset:2px}
+.admin-submit:hover:not(:disabled),.danger-button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 7px 18px #00000018}
+.admin-input:focus-visible{outline:2px solid var(--foreground);outline-offset:2px}
+.panel-grid>.feature-card{border:1px solid var(--border);box-shadow:0 8px 24px #00000008}
+
+/* Mirrored knockout tree with the final fixed in the centre. */
+.vmf-bracket-shell{overflow-x:auto;padding:clamp(14px,2.2vw,26px)}
+.vmf-bracket-tree{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,.72fr) minmax(0,1fr);gap:clamp(12px,2vw,28px);align-items:stretch;min-width:760px;padding-top:22px}
+.vmf-bracket-side{display:flex;align-items:stretch;gap:clamp(10px,1.5vw,20px);min-width:0}
+.vmf-bracket-left{justify-content:flex-start}
+.vmf-bracket-right{justify-content:flex-end}
+.vmf-bracket-round{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.vmf-bracket-round h3,.vmf-bracket-final h3{margin:0 0 4px;text-align:center;color:#dce8f7;font-size:9px;line-height:1.4;letter-spacing:.12em;white-space:normal}
+.vmf-bracket-round-matches{display:flex;flex:1;min-height:240px;flex-direction:column;justify-content:space-around;gap:14px}
+.vmf-bracket-final{display:flex;flex-direction:column;justify-content:center;min-width:0;align-self:stretch}
+.vmf-bracket-final h3{font-size:11px;letter-spacing:.2em;margin-bottom:14px}
+.vmf-bracket-final-matches{display:flex;flex-direction:column;justify-content:center;min-height:180px}
+.vmf-bracket-final .vmf-bracket-match{border:2px solid var(--bracket-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--bracket-accent) 18%,transparent),0 12px 28px #0004;padding:13px 14px}
+.vmf-bracket-final-placeholder{border:1px dashed var(--bracket-accent);border-radius:8px;padding:28px 12px;text-align:center;color:#fff;background:#ffffff0a;font-size:11px}
+.vmf-bracket-side .vmf-bracket-match{position:relative}
+.vmf-bracket-left .vmf-bracket-match:after,.vmf-bracket-right .vmf-bracket-match:before{content:"";position:absolute;top:50%;width:clamp(8px,1.5vw,20px);border-top:1px solid #ffffff45}
+.vmf-bracket-left .vmf-bracket-match:after{right:calc(clamp(8px,1.5vw,20px) * -1)}
+.vmf-bracket-right .vmf-bracket-match:before{left:calc(clamp(8px,1.5vw,20px) * -1)}
+@media(max-width:760px){.vmf-bracket-tree{min-width:760px}.vmf-bracket-round-matches{min-height:210px}.vmf-bracket-shell{padding:14px}}

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { PageHeading } from "@/components/SiteShell";
 import AdminMatchResults from "@/components/AdminMatchResults";
+import AdminResetStats from "@/components/AdminResetStats";
 
 type Competition = { id: string; name: string; season?: string | null; format?: string };
 type Team = { id: string; name: string; group_name?: string | null };
@@ -115,13 +116,6 @@ export default function AdminPanel() {
     setFixtureId(""); setPostponeDate(""); setPostponeReason("");
   }, postponeDate ? "Fixture rescheduled." : "Fixture postponed.");
 
-  const resetStats = () => run(async () => {
-    const confirmation = window.prompt('This will permanently delete ALL recorded goals and assists. Type RESET VMF PLAYER STATS to continue.');
-    if (confirmation !== "RESET VMF PLAYER STATS") return;
-    const data = await api("/api/admin/reset-stats", "POST", { confirmation });
-    setMessage(`Player statistics reset. ${data.reset} event(s) deleted.`);
-  }, "Player statistics reset.");
-
   const deleteFixture = () => run(async () => {
     if (!fixtureId) throw new Error("Select a fixture.");
     if (!window.confirm("Delete this fixture and its recorded events?")) return;
@@ -169,7 +163,7 @@ export default function AdminPanel() {
         </section>
 
         <section className="feature-card">
-          <p className="eyebrow">05 · MANUAL FIXTURE</p><h2>Create one fixture</h2>
+          <p className="eyebrow">05 · MANUAL FIXTURE</p><h2>Create one fixture</h2><p className="panel-note">To create a bracket match, choose Knockout as the stage, select both teams, and enter the exact round name (for example: Round of 12, Quarter-finals, Semi-finals or Final). Create each pairing as a separate fixture. Results entered above will update the bracket automatically.</p>
           <label className="admin-label">Home team</label><select className="admin-input" value={homeTeam} onChange={e => setHomeTeam(e.target.value)} disabled={!competitionId}><option value="">Select home team</option>{teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
           <label className="admin-label">Away team</label><select className="admin-input" value={awayTeam} onChange={e => setAwayTeam(e.target.value)} disabled={!competitionId}><option value="">Select away team</option>{teams.filter(t => t.id !== homeTeam).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
           <label className="admin-label">Stage</label><select className="admin-input" value={stage} onChange={e => setStage(e.target.value)}><option value="group">Group</option><option value="league">League</option><option value="knockout">Knockout</option></select>
@@ -179,11 +173,7 @@ export default function AdminPanel() {
           <button className="admin-submit" disabled={busy || !competitionId || teams.length < 2} onClick={createFixture}>Create fixture</button>
         </section>
 
-        <section className="feature-card">
-          <p className="eyebrow">07 · PLAYER STATISTICS</p><h2>Reset player stats</h2>
-          <p className="panel-note">Permanently clears every recorded goal and assist. Fixtures, scores, teams and competitions are not deleted.</p>
-          <button className="danger-button" disabled={busy} onClick={resetStats}>Reset all player statistics</button>
-        </section>
+        <AdminResetStats />
 
         <section className="feature-card">
           <p className="eyebrow">06 · FIXTURE ACTIONS</p><h2>Postpone, reschedule or delete</h2>
@@ -208,7 +198,7 @@ export default function AdminPanel() {
       .admin-label{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:16px 0 7px;color:var(--foreground)}
       .admin-input{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--foreground);font:inherit}
       .panel-textarea{min-height:100px;resize:vertical}
-      .admin-submit,.danger-button{width:100%;min-height:44px;border:0;border-radius:10px;padding:10px 14px;margin-top:12px;background:var(--foreground);color:var(--background);font-weight:800;cursor:pointer}
+      .admin-submit,.danger-button{width:100%;min-height:44px;border:1px solid currentColor;border-radius:10px;padding:10px 14px;margin-top:12px;background:var(--foreground);color:var(--background);font-weight:800;cursor:pointer}
       .danger-button{background:#a83232;color:#fff}
       button:disabled{opacity:.45;cursor:not-allowed}
       .panel-note{font-size:12px;color:var(--muted);line-height:1.6;margin:10px 0}
