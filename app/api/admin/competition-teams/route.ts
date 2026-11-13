@@ -2,6 +2,25 @@ import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { requireAdminOrApiKey } from "@/lib/admin-auth";
 
+export async function GET(req: Request) {
+  const denied = await requireAdminOrApiKey(req); if (denied) return denied;
+  try {
+    const { searchParams } = new URL(req.url);
+    const competitionId = searchParams.get("competition_id");
+    if (!competitionId) return NextResponse.json({ error: "competition_id is required" }, { status: 400 });
+    const teams = await sql`
+      SELECT t.id, t.name, ct.group_name
+      FROM competition_teams ct JOIN teams t ON t.id = ct.team_id
+      WHERE ct.competition_id = ${competitionId}
+      ORDER BY ct.group_name NULLS LAST, t.name ASC
+    `;
+    return NextResponse.json({ teams });
+  } catch (error) {
+    console.error("Competition teams lookup failed", error);
+    return NextResponse.json({ error: "Could not load competition teams" }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
  const denied=await requireAdminOrApiKey(req); if(denied)return denied;
  try {

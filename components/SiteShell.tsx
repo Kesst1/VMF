@@ -3,7 +3,7 @@ import Image from "next/image";
 import { ReactNode } from "react";
 
 const links = [
-  ["Overview", "/"], ["Competitions", "/competitions"], ["Fixtures", "/fixtures"],
+  ["Overview", "/"], ["Competitions", "/competitions"], ["Fixtures", "/fixtures"], ["Admin Panel", "/admin/panel"],
   ["Standings", "/standings"], ["Teams", "/teams"], ["Players", "/players"],
   ["Statistics", "/stats"],
 ];

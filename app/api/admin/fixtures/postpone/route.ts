@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     if (scheduledAt) {
       const date = new Date(scheduledAt);
-      if (Number.isNaN(date.getTime()) || !/[+-]\\d{2}:\\d{2}$/.test(scheduledAt)) {
+      if (Number.isNaN(date.getTime()) || !/[+-]\d{2}:\d{2}$/.test(scheduledAt)) {
         return NextResponse.json({ error: "scheduled_at must be an ISO datetime with timezone offset" }, { status: 400 });
       }
       const rows = await sql`
